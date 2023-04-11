@@ -1,2 +1,10 @@
-.vscode
 !lib
+test
+.vscode
+.eslintrc.js
+.gitignore
+.npmignore
+.prettierrc.yaml
+jest.config.js
+tsconfig.json
+tsconfig.tsbuildinfo

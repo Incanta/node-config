@@ -18,7 +18,11 @@ export class Config {
     this.values = {};
     this.customValues = {};
 
-    this.configDir = options?.configDir || path.join(process.cwd(), "config");
+    this.configDir =
+      options?.configDir ||
+      (process.env["NODE_CONFIG_DIR"] &&
+        path.relative(process.cwd(), process.env["NODE_CONFIG_DIR"])) ||
+      path.join(process.cwd(), "config");
 
     const defaultValues = Loader.load(path.join(this.configDir, "default"));
 

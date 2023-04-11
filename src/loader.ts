@@ -51,7 +51,7 @@ export class Loader {
     const baseObj: any = {};
 
     for (const content of contents) {
-      if (!content.isDirectory() && content.name.startsWith("index.")) {
+      if (!content.isDirectory() && /^_?index\./.exec(content.name) !== null) {
         merge(baseObj, Loader.loadFile(path.join(folder, content.name)));
       }
     }
@@ -71,7 +71,7 @@ export class Loader {
 
         baseObj[key] = obj;
       } else {
-        if (content.name.startsWith("index.")) {
+        if (/^_?index\./.exec(content.name) !== null) {
           // we already loaded this to be be in the base config
           continue;
         }
