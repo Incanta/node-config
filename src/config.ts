@@ -23,10 +23,7 @@ export class Config {
     const defaultValues = Loader.load(path.join(this.configDir, "default"));
 
     let envValues: any = {};
-    const configEnvDir =
-      options?.configEnv ||
-      process.env["NODE_CONFIG_ENV"] ||
-      process.env["NODE_ENV"];
+    const configEnvDir = options?.configEnv || process.env["NODE_CONFIG_ENV"];
     if (configEnvDir) {
       if (fs.existsSync(path.join(this.configDir, configEnvDir))) {
         envValues = Loader.load(path.join(this.configDir, configEnvDir));

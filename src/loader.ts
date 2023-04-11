@@ -1,8 +1,9 @@
 import fs from "fs";
 import path from "path";
-import JSONC from "jsonc-parser";
+import { parse as parseJsonc } from "jsonc-parser";
 import JSON5 from "json5";
 import YAML from "js-yaml";
+import merge from "lodash.merge";
 
 export class Loader {
   public static loadFile(filePath: string): any {
@@ -25,7 +26,7 @@ export class Loader {
       return JSON.parse(fileContents);
     } else if (/^jsonc$/i.exec(extension)) {
       // jsonc file
-      return JSONC.parse(fileContents); // todo: handle error callback
+      return parseJsonc(fileContents); // todo: handle error callback
     } else if (/^json5$/i.exec(extension)) {
       // json5 file
       return JSON5.parse(fileContents);
@@ -50,6 +51,12 @@ export class Loader {
     const baseObj: any = {};
 
     for (const content of contents) {
+      if (!content.isDirectory() && content.name.startsWith("index.")) {
+        merge(baseObj, Loader.loadFile(path.join(folder, content.name)));
+      }
+    }
+
+    for (const content of contents) {
       if (content.isDirectory()) {
         const key = content.name;
 
@@ -64,6 +71,11 @@ export class Loader {
 
         baseObj[key] = obj;
       } else {
+        if (content.name.startsWith("index.")) {
+          // we already loaded this to be be in the base config
+          continue;
+        }
+
         const fileParts = content.name.split(".");
         if (fileParts.length === 2) {
           const key = fileParts[0];
