@@ -9,8 +9,8 @@ describe("Injects environment variables from config", () => {
 
   test("correctly loads the correct environment variables", () => {
     const env = config.getConfiguredEnv();
-    console.log(env);
     expect(env.ENV_VAR_1).toBe("world");
     expect(env.ENV_VAR_2).toBe("42");
+    expect(env.ENV_VAR_3).toBe("iamfoo:iambar");
   });
 });
