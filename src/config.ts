@@ -14,6 +14,8 @@ export class Config {
   private values: any;
   private customValues: any;
 
+  private envVarConfig: any;
+
   public constructor(options?: IConfigOptions) {
     this.values = {};
     this.customValues = {};
@@ -48,6 +50,61 @@ export class Config {
     );
 
     merge(this.values, defaultValues, envValues, localValues, overrideValues);
+
+    // load the environment variables that are configured to be injected
+    // using config-env
+    const dirContents = fs.readdirSync(this.configDir, { encoding: "utf-8" });
+    this.envVarConfig = {};
+    for (const file of dirContents) {
+      if (file.startsWith("environment.")) {
+        this.envVarConfig = Loader.loadFile(path.join(this.configDir, file));
+        break;
+      }
+    }
+  }
+
+  public dir(): string {
+    return this.configDir;
+  }
+
+  private getFormattedConfig(format: string): string {
+    let value = "";
+    while (format.length > 0) {
+      const match = /\${([a-z.]+)}/g.exec(format);
+      if (match === null) {
+        value += format;
+        format = "";
+      } else {
+        value += format.slice(0, match.index);
+        format = format.substring(match.index + match[0].length);
+        const configKey = match[1];
+        value += `${this.get<any>(configKey)}`;
+      }
+    }
+
+    return value;
+  }
+
+  public getConfiguredEnv(): any {
+    const extraEnv: any = {};
+    const envKeys = Object.keys(this.envVarConfig);
+
+    for (const key of envKeys) {
+      const configKey = this.envVarConfig[key];
+
+      const envValue = this.get<any>(configKey);
+
+      if (
+        typeof envValue === "object" &&
+        typeof envValue.format !== "undefined"
+      ) {
+        extraEnv[key] = this.getFormattedConfig(envValue.format);
+      } else {
+        extraEnv[key] = `${envValue}`;
+      }
+    }
+
+    return extraEnv;
   }
 
   public get<T>(key: string): T {

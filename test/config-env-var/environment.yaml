@@ -1,0 +1,2 @@
+ENV_VAR_1: "hello"
+ENV_VAR_2: "foo.bar"
