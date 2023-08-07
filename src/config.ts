@@ -67,7 +67,7 @@ export class Config {
     return this.configDir;
   }
 
-  private getFormattedConfig(format: string): string {
+  private getFormattedConfig(prefix: string, format: string): string {
     let value = "";
     while (format.length > 0) {
       const match = /\${([a-z.]+)}/g.exec(format);
@@ -78,7 +78,7 @@ export class Config {
         value += format.slice(0, match.index);
         format = format.substring(match.index + match[0].length);
         const configKey = match[1];
-        value += `${this.get<any>(configKey)}`;
+        value += `${this.get<any>(`${prefix}.${configKey}`)}`;
       }
     }
 
@@ -98,7 +98,7 @@ export class Config {
         typeof envValue === "object" &&
         typeof envValue.format !== "undefined"
       ) {
-        extraEnv[key] = this.getFormattedConfig(envValue.format);
+        extraEnv[key] = this.getFormattedConfig(configKey, envValue.format);
       } else {
         extraEnv[key] = `${envValue}`;
       }

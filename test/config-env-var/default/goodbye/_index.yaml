@@ -1,4 +1,4 @@
 universe:
-  format: "${goodbye.universe.foo}:${goodbye.universe.bar}"
+  format: "${foo}:${bar}"
   foo: "iamfoo"
   bar: "iambar"
