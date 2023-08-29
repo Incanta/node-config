@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { execSync } from "child_process";
 import merge from "lodash.merge";
 import config from "./index";
