@@ -4,10 +4,7 @@ import { execSync } from "child_process";
 import merge from "lodash.merge";
 import config from "./index";
 
-const command = process.argv
-  .slice(2)
-  .map((arg) => `"${arg}"`)
-  .join(" ");
+const command = process.argv.slice(2).join(" ");
 
 const env: any = {};
 
