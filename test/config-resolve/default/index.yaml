@@ -1,0 +1,9 @@
+hello: world
+goodbye: ${hello}
+foo: ${hello}-hello
+bar: ${foo}-bar
+multi: ${foo}-${bar}
+root:
+  child: ${hello}-child
+  child2:
+    child3: ${hello}-child3

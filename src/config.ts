@@ -127,17 +127,52 @@ export class Config {
       obj = obj[part];
     }
 
+    const variableRegex = /\$\{[a-zA-Z\-_0-9.]+\}/g;
+
+    const replaceValue = (value: string): string => {
+      const regexResult = value.matchAll(variableRegex);
+      let result = value;
+
+      for (const match of regexResult) {
+        const keyToReplace = match[0].slice(2, match[0].length - 1);
+        const newValue = this.tryGet<string | number | boolean>(keyToReplace);
+        if (newValue !== null) {
+          result = result.replace(match[0], `${newValue}`);
+        }
+      }
+
+      return result;
+    };
+
+    // replace all ${value} with the value from the config
+    if (typeof obj === "string") {
+      obj = replaceValue(obj);
+    } else if (typeof obj === "object") {
+      // walk the object and replace all strings with the value from the config
+      const walkObject = (curObj: any): void => {
+        for (const property of Object.keys(curObj)) {
+          const value = curObj[property];
+          if (typeof value === "string" && property !== "format") {
+            curObj[property] = replaceValue(value);
+          } else if (typeof value === "object") {
+            walkObject(value);
+          }
+        }
+      };
+
+      walkObject(obj);
+    }
+
     return obj as T;
   }
 
-  public has(key: string): boolean {
+  public tryGet<T>(key: string): T | null {
     try {
-      this.get(key);
+      const value = this.get<T>(key);
+      return value;
     } catch {
-      return false;
+      return null;
     }
-
-    return true;
   }
 
   public set<T>(key: string, value: T): void {
