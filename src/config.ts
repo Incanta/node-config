@@ -43,13 +43,11 @@ export class Config {
       }
     }
 
-    const localValues = Loader.load(path.join(this.configDir, "local"));
-
     const overrideValues = Loader.loadFile(
       path.join(this.configDir, "override.json")
     );
 
-    merge(this.values, defaultValues, envValues, localValues, overrideValues);
+    merge(this.values, defaultValues, envValues, overrideValues);
 
     // load the environment variables that are configured to be injected
     // using config-env

@@ -5,6 +5,10 @@ import JSON5 from "json5";
 import YAML from "js-yaml";
 import merge from "lodash.merge";
 
+export interface IConfigOptions {
+  parentName?: string;
+}
+
 export class Loader {
   public static loadFile(filePath: string): any {
     if (!fs.existsSync(filePath)) {
@@ -43,12 +47,44 @@ export class Loader {
       return {};
     }
 
+    const baseObj: any = {};
+
+    const configFiles = ["_config.json", "config.json"];
+    for (const configFile of configFiles) {
+      if (fs.existsSync(path.join(folder, configFile))) {
+        try {
+          const folderConfig: IConfigOptions = JSON.parse(
+            fs.readFileSync(path.join(folder, configFile), {
+              encoding: "utf-8",
+            })
+          );
+
+          if (folderConfig.parentName) {
+            console.log(`Loading parent config ${folderConfig.parentName}`);
+            merge(
+              baseObj,
+              Loader.load(path.join(folder, "..", folderConfig.parentName))
+            );
+          }
+
+          break;
+        } catch (e: any) {
+          console.error(
+            `Invalid JSON in ${path.join(
+              folder,
+              configFile
+            )} file; skipping configuration`
+          );
+
+          break;
+        }
+      }
+    }
+
     const contents = fs.readdirSync(folder, {
       encoding: "utf-8",
       withFileTypes: true,
     });
-
-    const baseObj: any = {};
 
     for (const content of contents) {
       if (!content.isDirectory() && /^_?index\./.exec(content.name) !== null) {
@@ -60,16 +96,13 @@ export class Loader {
       if (content.isDirectory()) {
         const key = content.name;
 
-        if (typeof baseObj[key] !== "undefined") {
-          console.log(
-            `Could not load the directory ${key} because we already loaded a config for a file with the same name`
-          );
-          continue;
+        if (typeof baseObj[key] === "undefined") {
+          baseObj[key] = {};
         }
 
         const obj = Loader.load(path.join(folder, content.name));
 
-        baseObj[key] = obj;
+        merge(baseObj[key], obj);
       } else {
         if (/^_?index\./.exec(content.name) !== null) {
           // we already loaded this to be be in the base config
@@ -80,19 +113,13 @@ export class Loader {
         if (fileParts.length === 2) {
           const key = fileParts[0];
 
-          if (typeof baseObj[key] !== "undefined") {
-            console.log(
-              `Could not load the file ${path.join(
-                folder,
-                content.name
-              )} because we already loaded a config for a folder with the same name`
-            );
-            continue;
+          if (typeof baseObj[key] === "undefined") {
+            baseObj[key] = {};
           }
 
           const obj = Loader.loadFile(path.join(folder, content.name));
 
-          baseObj[key] = obj;
+          merge(baseObj[key], obj);
         } else {
           console.log(
             `Invalid file name ${content.name}. Config files must have a supported extension and contain no extra periods in the file name`
