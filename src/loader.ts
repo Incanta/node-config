@@ -6,7 +6,7 @@ import YAML from "js-yaml";
 import merge from "lodash.merge";
 
 export interface IConfigOptions {
-  parentName?: string;
+  parentNames?: string[];
 }
 
 export class Loader {
@@ -59,12 +59,11 @@ export class Loader {
             })
           );
 
-          if (folderConfig.parentName) {
-            console.log(`Loading parent config ${folderConfig.parentName}`);
-            merge(
-              baseObj,
-              Loader.load(path.join(folder, "..", folderConfig.parentName))
-            );
+          if (folderConfig.parentNames) {
+            for (const parentName of folderConfig.parentNames) {
+              console.log(`Loading parent config ${parentName}`);
+              merge(baseObj, Loader.load(path.join(folder, "..", parentName)));
+            }
           }
 
           break;
