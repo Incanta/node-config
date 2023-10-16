@@ -165,7 +165,11 @@ export class Config {
       if (obj === null) {
         obj = {};
       } else {
-        walkObject(obj);
+        if (obj.format) {
+          obj = this.getFormattedConfig(keyParts.join("."), obj.format);
+        } else {
+          walkObject(obj);
+        }
       }
     }
 

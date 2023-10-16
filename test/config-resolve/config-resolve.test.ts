@@ -29,4 +29,8 @@ describe("Config with YAML files", () => {
     expect(obj.child).toBe("world-child");
     expect(obj.child2.child3).toBe("world-child3");
   });
+
+  test("correctly resolves formatted reference", () => {
+    expect(config.get<string>("format-ref")).toBe("hello world");
+  });
 });

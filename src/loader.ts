@@ -61,7 +61,6 @@ export class Loader {
 
           if (folderConfig.parentNames) {
             for (const parentName of folderConfig.parentNames) {
-              console.log(`Loading parent config ${parentName}`);
               merge(baseObj, Loader.load(path.join(folder, "..", parentName)));
             }
           }
