@@ -30,7 +30,7 @@ describe("Config with YAML files", () => {
     expect(obj.child2.child3).toBe("world-child3");
   });
 
-  test("correctly resolves formatted reference", () => {
-    expect(config.get<string>("format-ref")).toBe("hello world");
+  test("correctly resolves relative paths", () => {
+    expect(config.get<string>("relative.hi")).toBe("world");
   });
 });

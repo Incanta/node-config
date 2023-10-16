@@ -1,4 +1,3 @@
-universe:
-  format: "${foo}:${bar}"
-  foo: "iamfoo"
-  bar: "iambar"
+universe: "${./foo}:${./bar}"
+foo: "iamfoo"
+bar: "iambar"

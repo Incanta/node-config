@@ -3,11 +3,9 @@ goodbye: ${hello}
 foo: ${hello}-hello
 bar: ${foo}-bar
 multi: ${foo}-${bar}
-formatted:
-  format: "${hi} ${bye}"
-  hi: hello
+relative:
+  hi: ${./bye}
   bye: world
-format-ref: ${formatted}
 root:
   child: ${hello}-child
   child2:

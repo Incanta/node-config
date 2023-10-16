@@ -65,24 +65,6 @@ export class Config {
     return this.configDir;
   }
 
-  private getFormattedConfig(prefix: string, format: string): string {
-    let value = "";
-    while (format.length > 0) {
-      const match = /\${([a-z.]+)}/g.exec(format);
-      if (match === null) {
-        value += format;
-        format = "";
-      } else {
-        value += format.slice(0, match.index);
-        format = format.substring(match.index + match[0].length);
-        const configKey = match[1];
-        value += `${this.get<any>(`${prefix}.${configKey}`)}`;
-      }
-    }
-
-    return value;
-  }
-
   public getConfiguredEnv(): any {
     const extraEnv: any = {};
     const envKeys = Object.keys(this.envVarConfig);
@@ -92,14 +74,7 @@ export class Config {
 
       const envValue = this.get<any>(configKey);
 
-      if (
-        typeof envValue === "object" &&
-        typeof envValue.format !== "undefined"
-      ) {
-        extraEnv[key] = this.getFormattedConfig(configKey, envValue.format);
-      } else {
-        extraEnv[key] = `${envValue}`;
-      }
+      extraEnv[key] = `${envValue}`;
     }
 
     return extraEnv;
@@ -125,14 +100,20 @@ export class Config {
       obj = obj[part];
     }
 
-    const variableRegex = /\$\{[a-zA-Z\-_0-9.]+\}/g;
+    const variableRegex = /\$\{[a-zA-Z\-_0-9./]+\}/g;
 
     const replaceValue = (value: string): string => {
       const regexResult = value.matchAll(variableRegex);
       let result = value;
 
       for (const match of regexResult) {
-        const keyToReplace = match[0].slice(2, match[0].length - 1);
+        let keyToReplace = match[0].slice(2, match[0].length - 1);
+        if (keyToReplace.startsWith("./")) {
+          // convert relative path to absolute path
+          keyToReplace = `${keyParts
+            .slice(0, keyParts.length - 1)
+            .join(".")}.${keyToReplace.slice(2)}`;
+        }
         const newValue = this.tryGet<string | number | boolean>(keyToReplace);
         if (newValue !== null) {
           result = result.replace(match[0], `${newValue}`);
@@ -150,7 +131,7 @@ export class Config {
       const walkObject = (curObj: any): void => {
         for (const property of Object.keys(curObj)) {
           const value = curObj[property];
-          if (typeof value === "string" && property !== "format") {
+          if (typeof value === "string") {
             curObj[property] = replaceValue(value);
           } else if (typeof value === "object") {
             if (value === null) {
@@ -165,11 +146,7 @@ export class Config {
       if (obj === null) {
         obj = {};
       } else {
-        if (obj.format) {
-          obj = this.getFormattedConfig(keyParts.join("."), obj.format);
-        } else {
-          walkObject(obj);
-        }
+        walkObject(obj);
       }
     }
 
