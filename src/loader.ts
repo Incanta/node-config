@@ -85,13 +85,20 @@ export class Loader {
       withFileTypes: true,
     });
 
+    // first load the index file
     for (const content of contents) {
       if (!content.isDirectory() && /^_?index\./.exec(content.name) !== null) {
         merge(baseObj, Loader.loadFile(path.join(folder, content.name)));
       }
     }
 
+    // then load other files
     for (const content of contents) {
+      // skip git meta files (.gitignore, .gitattributes, etc)
+      if (/^\.git/.exec(content.name) !== null) {
+        continue;
+      }
+
       if (content.isDirectory()) {
         const key = content.name;
 
