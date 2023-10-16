@@ -162,7 +162,11 @@ export class Config {
         }
       };
 
-      walkObject(obj);
+      if (obj === null) {
+        obj = {};
+      } else {
+        walkObject(obj);
+      }
     }
 
     return obj as T;
