@@ -153,7 +153,11 @@ export class Config {
           if (typeof value === "string" && property !== "format") {
             curObj[property] = replaceValue(value);
           } else if (typeof value === "object") {
-            walkObject(value);
+            if (value === null) {
+              curObj[property] = {};
+            } else {
+              walkObject(value);
+            }
           }
         }
       };
