@@ -135,7 +135,7 @@ export class Config {
             curObj[property] = replaceValue(value);
           } else if (typeof value === "object") {
             if (value === null) {
-              curObj[property] = {};
+              curObj[property] = null;
             } else {
               walkObject(value);
             }
@@ -143,9 +143,7 @@ export class Config {
         }
       };
 
-      if (obj === null) {
-        obj = {};
-      } else {
+      if (obj !== null) {
         walkObject(obj);
       }
     }
