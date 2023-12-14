@@ -12,5 +12,6 @@ describe("Injects environment variables from config", () => {
     expect(env.ENV_VAR_1).toBe("world");
     expect(env.ENV_VAR_2).toBe("42");
     expect(env.ENV_VAR_3).toBe("iamfoo:iambar");
+    expect(env.ENV_VAR_4).toBe("mything1/mything2");
   });
 });

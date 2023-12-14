@@ -1,1 +1,6 @@
 hello: world
+
+object:
+  format: "${./thing1}/${./thing2}"
+  thing1: "mything1"
+  thing2: "mything2"
