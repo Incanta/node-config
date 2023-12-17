@@ -20,16 +20,38 @@ export class Config {
     this.values = {};
     this.customValues = {};
 
+    let defaultConfigDir = "config";
+    let defaultConfigEnv = "default";
+    if (fs.existsSync(path.join(process.cwd(), "config-settings.json"))) {
+      const configSettings = JSON.parse(
+        fs.readFileSync(
+          path.join(process.cwd(), "config-settings.json"),
+          "utf-8"
+        )
+      );
+
+      if (configSettings.defaults) {
+        if (configSettings.defaults.dir) {
+          defaultConfigDir = configSettings.defaults.configDir;
+        }
+
+        if (configSettings.defaults.env) {
+          defaultConfigEnv = configSettings.defaults.env;
+        }
+      }
+    }
+
     this.configDir =
       options?.configDir ||
       (process.env["NODE_CONFIG_DIR"] &&
         path.relative(process.cwd(), process.env["NODE_CONFIG_DIR"])) ||
-      path.join(process.cwd(), "config");
+      path.join(process.cwd(), defaultConfigDir);
 
     const defaultValues = Loader.load(path.join(this.configDir, "default"));
 
     let envValues: any = {};
-    const configEnvDir = options?.configEnv || process.env["NODE_CONFIG_ENV"];
+    const configEnvDir =
+      options?.configEnv || process.env["NODE_CONFIG_ENV"] || defaultConfigEnv;
     if (configEnvDir) {
       if (fs.existsSync(path.join(this.configDir, configEnvDir))) {
         envValues = Loader.load(path.join(this.configDir, configEnvDir));
