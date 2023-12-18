@@ -32,7 +32,7 @@ export class Config {
 
       if (configSettings.defaults) {
         if (configSettings.defaults.dir) {
-          defaultConfigDir = configSettings.defaults.configDir;
+          defaultConfigDir = configSettings.defaults.dir;
         }
 
         if (configSettings.defaults.env) {
