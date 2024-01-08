@@ -61,6 +61,10 @@ export class Loader {
 
           if (folderConfig.parentNames) {
             for (const parentName of folderConfig.parentNames) {
+              if (parentName === "default") {
+                // skip explicitly stated default parents; they're already loaded
+                continue;
+              }
               merge(baseObj, Loader.load(path.join(folder, "..", parentName)));
             }
           }
