@@ -182,6 +182,10 @@ export class Config {
     }
   }
 
+  public getJson(): any {
+    return this.values;
+  }
+
   public set<T>(key: string, value: T): void {
     const parts = key.split(".");
     this.setWithParts<T>(parts, value);
