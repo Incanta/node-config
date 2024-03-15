@@ -31,4 +31,18 @@ describe("Kebab-case conversion", () => {
     expect(nestedObj.nestedKey).toBe("val4");
     expect(nestedObj.nestedKey2).toBe("val6");
   });
+
+  test("can convert objects in array", () => {
+    const arr = config.get<any>("arr");
+    expect(arr.length).toBe(2);
+    expect(arr[0].arrKey).toBe("val7");
+    expect(arr[1].arrObj.arrKey2).toBe("val8");
+  });
+
+  test("doesn't mess up arrays with literal values", () => {
+    const arr = config.get<any>("arr2");
+    expect(arr.length).toBe(2);
+    expect(arr[0]).toBe("val9");
+    expect(arr[1]).toBe("val10");
+  });
 });

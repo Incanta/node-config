@@ -21,6 +21,18 @@ export class Loader {
         obj[key] !== null
       ) {
         newObj[key] = Loader.convertKebabToCamelCase(obj[key]);
+      } else if (Array.isArray(obj[key])) {
+        newObj[key] = obj[key].map((item: any) => {
+          if (
+            typeof item === "object" &&
+            !Array.isArray(item) &&
+            item !== null
+          ) {
+            return Loader.convertKebabToCamelCase(item);
+          } else {
+            return item;
+          }
+        });
       } else {
         newObj[key] = obj[key];
       }
