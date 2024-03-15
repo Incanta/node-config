@@ -69,9 +69,11 @@ export class Loader {
       obj = {};
     }
 
-    const newObj = Loader.convertKebabToCamelCase(obj);
+    if (typeof obj === "object" && obj !== null && !Array.isArray(obj)) {
+      obj = Loader.convertKebabToCamelCase(obj);
+    }
 
-    return newObj;
+    return obj;
   }
 
   public static load(folder: string): any {
