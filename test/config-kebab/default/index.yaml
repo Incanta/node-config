@@ -1,0 +1,7 @@
+hello-world: val1
+test-1: val2
+hello-world-goodbye-universe: val3
+nested-obj:
+  nested-key: val4
+  nested-key-2: val5
+  nestedKey2: val6
