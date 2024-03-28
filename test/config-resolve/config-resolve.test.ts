@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { Config } from "../../src/config";
+import Config from "../../src/config";
 import path from "path";
 
 describe("Config with YAML files", () => {

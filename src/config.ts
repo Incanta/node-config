@@ -8,7 +8,7 @@ export interface IConfigOptions {
   configEnv?: string;
 }
 
-export class Config {
+export default class Config {
   private configDir: string;
 
   private values: any;
