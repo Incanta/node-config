@@ -9,7 +9,7 @@ export interface IConfigOptions {
 }
 
 export default class Config {
-  private configDir: string;
+  private configDir: string = "";
 
   private values: any;
   private customValues: any;
@@ -17,6 +17,10 @@ export default class Config {
   private envVarConfig: any;
 
   public constructor(options?: IConfigOptions) {
+    this.init(options);
+  }
+
+  public init(options?: IConfigOptions): void {
     this.values = {};
     this.customValues = {};
 
