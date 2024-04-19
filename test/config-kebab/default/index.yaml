@@ -4,7 +4,6 @@ hello-world-goodbye-universe: val3
 nested-obj:
   nested-key: val4
   nested-key-2: val5
-  nestedKey2: val6
 arr:
   - arr-key: val7
   - arr-obj:

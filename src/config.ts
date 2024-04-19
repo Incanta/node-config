@@ -51,14 +51,28 @@ export default class Config {
         path.relative(process.cwd(), process.env["NODE_CONFIG_DIR"])) ||
       path.join(process.cwd(), defaultConfigDir);
 
-    const defaultValues = Loader.load(path.join(this.configDir, "default"));
-
-    let envValues: any = {};
     const configEnvDir =
       options?.configEnv || process.env["NODE_CONFIG_ENV"] || defaultConfigEnv;
+
+    const configFolderOptions = Loader.readConfigSettings(
+      path.join(this.configDir, configEnvDir)
+    );
+
+    const defaultValues = Loader.loadRoot(
+      path.join(this.configDir, "default"),
+      {
+        ...configFolderOptions,
+        parentNames: [],
+      }
+    );
+
+    let envValues: any = {};
     if (configEnvDir) {
       if (fs.existsSync(path.join(this.configDir, configEnvDir))) {
-        envValues = Loader.load(path.join(this.configDir, configEnvDir));
+        envValues = Loader.loadRoot(
+          path.join(this.configDir, configEnvDir),
+          configFolderOptions
+        );
       } else {
         console.log(
           `Cannot use environment deployment value of ${configEnvDir} because ${path.join(
@@ -70,7 +84,8 @@ export default class Config {
     }
 
     const overrideValues = Loader.loadFile(
-      path.join(this.configDir, "override.json")
+      path.join(this.configDir, "override.json"),
+      {}
     );
 
     merge(this.values, defaultValues, envValues, overrideValues);
@@ -81,7 +96,10 @@ export default class Config {
     this.envVarConfig = {};
     for (const file of dirContents) {
       if (file.startsWith("environment.")) {
-        this.envVarConfig = Loader.loadFile(path.join(this.configDir, file));
+        this.envVarConfig = Loader.loadFile(
+          path.join(this.configDir, file),
+          {}
+        );
         break;
       }
     }
@@ -119,11 +137,16 @@ export default class Config {
     let obj = this.values;
 
     for (const part of keyParts) {
-      if (typeof obj[part] === "undefined") {
+      // convert to camelCase first
+      const newPart = part.replace(/-([a-zA-Z0-9])/g, function (_, match) {
+        return match.toUpperCase();
+      });
+
+      if (typeof obj[newPart] === "undefined") {
         throw new Error(`Could not find value for key ${keyParts.join(".")}`);
       }
 
-      obj = obj[part];
+      obj = obj[newPart];
     }
 
     const variableRegex = /\$\{[a-zA-Z\-_0-9./]+\}/g;

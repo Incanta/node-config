@@ -5,51 +5,94 @@ import JSON5 from "json5";
 import YAML from "js-yaml";
 import merge from "lodash.merge";
 
-export interface IConfigOptions {
+export interface IConfigFolderOptions {
+  keepKebabCase?: boolean;
   parentNames?: string[];
 }
 
 export class Loader {
+  public static readConfigSettings(folder: string): IConfigFolderOptions {
+    let options: IConfigFolderOptions = {};
+    const configFiles = ["_config.json", "config.json"];
+    for (const configFile of configFiles) {
+      if (fs.existsSync(path.join(folder, configFile))) {
+        try {
+          options = JSON.parse(
+            fs.readFileSync(path.join(folder, configFile), {
+              encoding: "utf-8",
+            })
+          );
+
+          break;
+        } catch (e: any) {
+          console.error(
+            `Invalid JSON in ${path.join(
+              folder,
+              configFile
+            )} file; skipping configuration`
+          );
+
+          break;
+        }
+      }
+    }
+
+    return options;
+  }
+
   // add additional camelCase keys for any kebab-case keys (without overwriting existing keys)
-  public static convertKebabToCamelCase(obj: any): any {
+  public static convertKebabToCamelCase(
+    obj: any,
+    options: IConfigFolderOptions
+  ): any {
     const newObj: any = {};
 
     for (const key of Object.keys(obj)) {
+      const newKey = key.replace(/-([a-zA-Z0-9])/g, function (_, match) {
+        return match.toUpperCase();
+      });
+
+      if (typeof obj[newKey] !== "undefined" && newKey !== key) {
+        console.error(
+          `Key ${newKey} already exists in object, but ${key} was also defined, skipping ${key}`
+        );
+        continue;
+      }
+
+      let newSubObj: any = {};
       if (
         typeof obj[key] === "object" &&
         !Array.isArray(obj[key]) &&
         obj[key] !== null
       ) {
-        newObj[key] = Loader.convertKebabToCamelCase(obj[key]);
+        newSubObj = Loader.convertKebabToCamelCase(obj[key], options);
       } else if (Array.isArray(obj[key])) {
-        newObj[key] = obj[key].map((item: any) => {
+        newSubObj = obj[key].map((item: any) => {
           if (
             typeof item === "object" &&
             !Array.isArray(item) &&
             item !== null
           ) {
-            return Loader.convertKebabToCamelCase(item);
+            return Loader.convertKebabToCamelCase(item, options);
           } else {
             return item;
           }
         });
       } else {
-        newObj[key] = obj[key];
+        newSubObj = obj[key];
       }
 
-      const newKey = key.replace(/-([a-zA-Z0-9])/g, function (_, match) {
-        return match.toUpperCase();
-      });
+      newObj[newKey] = newSubObj;
 
-      if (newKey !== key) {
-        newObj[newKey] = newObj[key];
+      if (options.keepKebabCase === true && newKey !== key) {
+        newObj[key] = newSubObj;
       }
     }
 
     return newObj;
   }
 
-  public static loadFile(filePath: string): any {
+  public static loadFile(filePath: string, options: IConfigFolderOptions): any {
     if (!fs.existsSync(filePath)) {
       return {};
     }
@@ -82,52 +125,39 @@ export class Loader {
     }
 
     if (typeof obj === "object" && obj !== null && !Array.isArray(obj)) {
-      obj = Loader.convertKebabToCamelCase(obj);
+      obj = Loader.convertKebabToCamelCase(obj, options);
     }
 
     return obj;
   }
 
-  public static load(folder: string): any {
+  public static loadRoot(folder: string, options: IConfigFolderOptions): any {
+    const baseObj: any = {};
+
+    if (options.parentNames) {
+      for (const parentName of options.parentNames) {
+        if (parentName === "default") {
+          // skip explicitly stated default parents; they're already loaded
+          continue;
+        }
+        merge(
+          baseObj,
+          Loader.load(path.join(folder, "..", parentName), options)
+        );
+      }
+    }
+
+    merge(baseObj, Loader.load(folder, options));
+
+    return baseObj;
+  }
+
+  public static load(folder: string, options: IConfigFolderOptions): any {
     if (!fs.existsSync(folder)) {
       return {};
     }
 
     const baseObj: any = {};
-
-    const configFiles = ["_config.json", "config.json"];
-    for (const configFile of configFiles) {
-      if (fs.existsSync(path.join(folder, configFile))) {
-        try {
-          const folderConfig: IConfigOptions = JSON.parse(
-            fs.readFileSync(path.join(folder, configFile), {
-              encoding: "utf-8",
-            })
-          );
-
-          if (folderConfig.parentNames) {
-            for (const parentName of folderConfig.parentNames) {
-              if (parentName === "default") {
-                // skip explicitly stated default parents; they're already loaded
-                continue;
-              }
-              merge(baseObj, Loader.load(path.join(folder, "..", parentName)));
-            }
-          }
-
-          break;
-        } catch (e: any) {
-          console.error(
-            `Invalid JSON in ${path.join(
-              folder,
-              configFile
-            )} file; skipping configuration`
-          );
-
-          break;
-        }
-      }
-    }
 
     const contents = fs.readdirSync(folder, {
       encoding: "utf-8",
@@ -137,7 +167,10 @@ export class Loader {
     // first load the index file
     for (const content of contents) {
       if (!content.isDirectory() && /^_?index\./.exec(content.name) !== null) {
-        merge(baseObj, Loader.loadFile(path.join(folder, content.name)));
+        merge(
+          baseObj,
+          Loader.loadFile(path.join(folder, content.name), options)
+        );
       }
     }
 
@@ -155,7 +188,7 @@ export class Loader {
           baseObj[key] = {};
         }
 
-        const obj = Loader.load(path.join(folder, content.name));
+        const obj = Loader.load(path.join(folder, content.name), options);
 
         merge(baseObj[key], obj);
       } else {
@@ -172,7 +205,7 @@ export class Loader {
             baseObj[key] = {};
           }
 
-          const obj = Loader.loadFile(path.join(folder, content.name));
+          const obj = Loader.loadFile(path.join(folder, content.name), options);
 
           merge(baseObj[key], obj);
         } else {
