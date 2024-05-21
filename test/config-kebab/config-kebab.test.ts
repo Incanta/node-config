@@ -7,9 +7,14 @@ describe("Kebab-case conversion", () => {
     configDir: path.join(__dirname),
   });
 
-  const configKeep = new Config({
+  const configBoth = new Config({
     configDir: path.join(__dirname),
-    configEnv: "keep",
+    configEnv: "both",
+  });
+
+  const configOriginal = new Config({
+    configDir: path.join(__dirname),
+    configEnv: "original",
   });
 
   test("correctly maintains existing key structure", () => {
@@ -47,14 +52,26 @@ describe("Kebab-case conversion", () => {
     expect(arr[1]).toBe("val10");
   });
 
-  test("keeps kebab-case keys enabled", () => {
+  test("possible to specify multiple casing options", () => {
     expect(config.get<string>("hello-world")).toBe("val1");
 
     const origObj = config.getJson();
-    const keepObj = configKeep.getJson();
+    const bothObj = configBoth.getJson();
+    const originalObj = configOriginal.getJson();
 
-    expect(keepObj["hello-world"]).toBe("val1");
-    expect(keepObj.helloWorld).toBe("val1");
     expect(origObj["hello-world"]).toBeUndefined();
+    expect(origObj.helloWorld).toBe("val1");
+    expect(bothObj["hello-world"]).toBe("val1");
+    expect(bothObj.helloWorld).toBe("val1");
+    expect(originalObj["hello-world"]).toBe("val1");
+    expect(originalObj.helloWorld).toBeUndefined();
+  });
+
+  test("possible to override variableCasing in object", () => {
+    const origObj = config.getJson();
+    expect(origObj["hello-world"]).toBeUndefined();
+    expect(origObj.overrideCasing).toBeDefined();
+    expect(origObj.overrideCasing.myVariable).toBeUndefined();
+    expect(origObj.overrideCasing["my-variable"]).toBe("val11");
   });
 });

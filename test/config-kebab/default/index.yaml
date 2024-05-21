@@ -11,3 +11,6 @@ arr:
 arr2:
   - val9
   - val10
+override-casing:
+  variableCasing: original
+  my-variable: val11

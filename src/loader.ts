@@ -6,7 +6,7 @@ import YAML from "js-yaml";
 import merge from "lodash.merge";
 
 export interface IConfigFolderOptions {
-  keepKebabCase?: boolean;
+  variableCasing?: "original" | "camel" | "both";
   parentNames?: string[];
 }
 
@@ -47,6 +47,14 @@ export class Loader {
   ): any {
     const newObj: any = {};
 
+    const objectOptions: IConfigFolderOptions = {
+      ...options,
+    };
+
+    if (typeof obj.variableCasing === "string") {
+      objectOptions.variableCasing = obj.variableCasing;
+    }
+
     for (const key of Object.keys(obj)) {
       const newKey = key.replace(/-([a-zA-Z0-9])/g, function (_, match) {
         return match.toUpperCase();
@@ -65,7 +73,7 @@ export class Loader {
         !Array.isArray(obj[key]) &&
         obj[key] !== null
       ) {
-        newSubObj = Loader.convertKebabToCamelCase(obj[key], options);
+        newSubObj = Loader.convertKebabToCamelCase(obj[key], objectOptions);
       } else if (Array.isArray(obj[key])) {
         newSubObj = obj[key].map((item: any) => {
           if (
@@ -73,7 +81,7 @@ export class Loader {
             !Array.isArray(item) &&
             item !== null
           ) {
-            return Loader.convertKebabToCamelCase(item, options);
+            return Loader.convertKebabToCamelCase(item, objectOptions);
           } else {
             return item;
           }
@@ -82,9 +90,19 @@ export class Loader {
         newSubObj = obj[key];
       }
 
-      newObj[newKey] = newSubObj;
+      const keepCamel =
+        typeof objectOptions.variableCasing === "undefined" ||
+        objectOptions.variableCasing === "camel" ||
+        objectOptions.variableCasing === "both";
+      const keepOriginal =
+        objectOptions.variableCasing === "original" ||
+        objectOptions.variableCasing === "both";
 
-      if (options.keepKebabCase === true && newKey !== key) {
+      if (keepCamel) {
+        newObj[newKey] = newSubObj;
+      }
+
+      if (keepOriginal && ((keepCamel && newKey !== key) || !keepCamel)) {
         newObj[key] = newSubObj;
       }
     }
