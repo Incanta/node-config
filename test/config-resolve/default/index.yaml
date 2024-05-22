@@ -11,3 +11,7 @@ root:
   child2:
     child3: ${hello}-child3
     child4: ${../../relative/hi}
+arr:
+  - ${hello}
+arr2:
+  - name: ${hello}

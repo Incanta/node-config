@@ -35,6 +35,16 @@ describe("Config with YAML files", () => {
     expect(config.get<string>("root.child2.child4")).toBe("world");
   });
 
+  test("correctly resolves arrays", () => {
+    const arr = config.get<string[]>("arr");
+    expect(arr.length).toBe(1);
+    expect(arr[0]).toBe("world");
+
+    const arr2 = config.get<any[]>("arr2");
+    expect(arr2.length).toBe(1);
+    expect(arr2[0].name).toBe("world");
+  });
+
   test("correctly resolves paths with getJson", () => {
     const obj = config.getJson();
     expect(obj.hello).toBe("world");

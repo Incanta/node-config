@@ -201,6 +201,24 @@ export default class Config {
     return result;
   }
 
+  public normalizeArray(arr: any[], currentPath: string[]): any[] {
+    return arr.map((value) => {
+      if (typeof value === "string") {
+        return this.normalizeString(value, currentPath);
+      } else if (typeof value === "object") {
+        if (value === null) {
+          return null;
+        } else if (Array.isArray(value)) {
+          return this.normalizeArray(value, currentPath);
+        } else {
+          return this.normalizeObject(value, currentPath);
+        }
+      }
+
+      return value;
+    });
+  }
+
   public normalizeObject(obj: any, currentPath: string[]): any {
     if (typeof obj !== "object" || obj === null) {
       return obj;
@@ -216,7 +234,7 @@ export default class Config {
         if (value === null) {
           newObj[property] = null;
         } else if (Array.isArray(value)) {
-          continue;
+          newObj[property] = this.normalizeArray(value, currentPath);
         } else {
           newObj[property] = this.normalizeObject(value, [
             ...currentPath,
