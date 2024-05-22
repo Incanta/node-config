@@ -10,3 +10,4 @@ root:
   child: ${hello}-child
   child2:
     child3: ${hello}-child3
+    child4: ${../../relative/hi}

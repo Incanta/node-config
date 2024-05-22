@@ -32,5 +32,18 @@ describe("Config with YAML files", () => {
 
   test("correctly resolves relative paths", () => {
     expect(config.get<string>("relative.hi")).toBe("world");
+    expect(config.get<string>("root.child2.child4")).toBe("world");
+  });
+
+  test("correctly resolves paths with getJson", () => {
+    const obj = config.getJson();
+    expect(obj.hello).toBe("world");
+    expect(obj.goodbye).toBe("world");
+    expect(obj.foo).toBe("world-hello");
+    expect(obj.bar).toBe("world-hello-bar");
+    expect(obj.multi).toBe("world-hello-world-hello-bar");
+    expect(obj.root.child).toBe("world-child");
+    expect(obj.root.child2.child3).toBe("world-child3");
+    expect(obj.relative.hi).toBe("world");
   });
 });

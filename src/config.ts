@@ -12,6 +12,7 @@ export default class Config {
   private configDir: string = "";
 
   private values: any;
+  private normalizedValues: any;
   private customValues: any;
 
   private envVarConfig: any;
@@ -22,6 +23,7 @@ export default class Config {
 
   public init(options?: IConfigOptions): void {
     this.values = {};
+    this.normalizedValues = {};
     this.customValues = {};
 
     let defaultConfigDir = "config";
@@ -89,6 +91,7 @@ export default class Config {
     );
 
     merge(this.values, defaultValues, envValues, overrideValues);
+    this.normalizedValues = this.normalizeObject(this.values, []);
 
     // load the environment variables that are configured to be injected
     // using config-env
@@ -134,7 +137,7 @@ export default class Config {
       throw new Error("Cannot use an empty key");
     }
 
-    let obj = this.values;
+    let obj = merge({}, this.normalizedValues);
 
     for (const part of keyParts) {
       // convert to camelCase first
@@ -149,55 +152,81 @@ export default class Config {
       obj = obj[newPart];
     }
 
+    return obj as T;
+  }
+
+  public normalizeString(value: string, currentPath: string[]): string {
+    let result = value;
+
     const variableRegex = /\$\{[a-zA-Z\-_0-9./]+\}/g;
+    const regexResult = value.matchAll(variableRegex);
+    for (const match of regexResult) {
+      const key = match[0].slice(2, match[0].length - 1);
 
-    const replaceValue = (value: string): string => {
-      const regexResult = value.matchAll(variableRegex);
-      let result = value;
-
-      for (const match of regexResult) {
-        let keyToReplace = match[0].slice(2, match[0].length - 1);
-        if (keyToReplace.startsWith("./")) {
-          // convert relative path to absolute path
-          keyToReplace = `${keyParts
-            .slice(0, keyParts.length - 1)
-            .join(".")}.${keyToReplace.slice(2)}`;
-        }
-        const newValue = this.tryGet<string | number | boolean>(keyToReplace);
-        if (newValue !== null) {
-          result = result.replace(match[0], `${newValue}`);
-        }
+      let keyToFetchValue: string;
+      if (key.startsWith(".")) {
+        keyToFetchValue = path
+          .normalize(`${currentPath.join("/")}/${key}`)
+          .replaceAll("\\", "/")
+          .replaceAll("/", ".");
+      } else {
+        keyToFetchValue = key;
       }
 
-      return result;
-    };
+      let obj = merge({}, this.values);
 
-    // replace all ${value} with the value from the config
-    if (typeof obj === "string") {
-      obj = replaceValue(obj);
-    } else if (typeof obj === "object") {
-      // walk the object and replace all strings with the value from the config
-      const walkObject = (curObj: any): void => {
-        for (const property of Object.keys(curObj)) {
-          const value = curObj[property];
-          if (typeof value === "string") {
-            curObj[property] = replaceValue(value);
-          } else if (typeof value === "object") {
-            if (value === null) {
-              curObj[property] = null;
-            } else {
-              walkObject(value);
-            }
-          }
+      const keyParts = keyToFetchValue.split(".");
+      for (const part of keyParts) {
+        // convert to camelCase first
+        const newPart = part.replace(/-([a-zA-Z0-9])/g, function (_, match) {
+          return match.toUpperCase();
+        });
+
+        if (typeof obj[newPart] === "undefined") {
+          throw new Error(`Could not find value for key ${keyParts.join(".")}`);
         }
-      };
+
+        obj = obj[newPart];
+      }
 
       if (obj !== null) {
-        walkObject(obj);
+        if (typeof obj === "string" && obj.match(variableRegex) !== null) {
+          obj = this.normalizeString(obj, keyParts.slice(0, -1));
+        }
+
+        result = result.replace(match[0], `${obj}`);
       }
     }
 
-    return obj as T;
+    return result;
+  }
+
+  public normalizeObject(obj: any, currentPath: string[]): any {
+    if (typeof obj !== "object" || obj === null) {
+      return obj;
+    }
+
+    const newObj = merge({}, obj);
+
+    for (const property of Object.keys(newObj)) {
+      const value = newObj[property];
+      if (typeof value === "string") {
+        newObj[property] = this.normalizeString(value, currentPath);
+      } else if (typeof value === "object") {
+        if (value === null) {
+          newObj[property] = null;
+        } else if (Array.isArray(value)) {
+          continue;
+        } else {
+          newObj[property] = this.normalizeObject(value, [
+            ...currentPath,
+            property,
+          ]);
+        }
+      }
+    }
+
+    return newObj;
   }
 
   public tryGet<T>(key: string): T | null {
@@ -210,7 +239,9 @@ export default class Config {
   }
 
   public getJson(): any {
-    return this.values;
+    const values = merge({}, this.normalizedValues);
+
+    return values;
   }
 
   public set<T>(key: string, value: T): void {
