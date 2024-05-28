@@ -158,9 +158,14 @@ export class Loader {
           // skip explicitly stated default parents; they're already loaded
           continue;
         }
+        const parentFolder = path.join(folder, "..", parentName);
+        const parentOptions = Loader.readConfigSettings(parentFolder);
         merge(
           baseObj,
-          Loader.load(path.join(folder, "..", parentName), options)
+          Loader.loadRoot(parentFolder, {
+            ...options,
+            parentNames: parentOptions.parentNames,
+          })
         );
       }
     }
