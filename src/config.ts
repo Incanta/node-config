@@ -75,9 +75,9 @@ export default class Config {
           path.join(this.configDir, configEnvDir),
           configFolderOptions
         );
-      } else {
+      } else if (process.env["NODE_CONFIG_SKIP_ENV_WARNING"] !== "true") {
         console.log(
-          `Cannot use environment deployment value of ${configEnvDir} because ${path.join(
+          `Cannot use config environment '${configEnvDir}' because ${path.join(
             this.configDir,
             configEnvDir
           )} doesn't exist`
