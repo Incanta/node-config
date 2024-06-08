@@ -2,6 +2,7 @@ import merge from "lodash.merge";
 import path from "path";
 import fs from "fs";
 import { Loader } from "./loader";
+import { GetSecretsProvider, SecretsProviderType } from "./secrets/provider";
 
 export interface IConfigOptions {
   configDir?: string;
@@ -17,6 +18,13 @@ export default class Config {
 
   private envVarConfig: any;
 
+  private secretsToken: {
+    value: string;
+    expires: Date;
+  } | null = null;
+  private secretsCache: Record<string, any> = {};
+  private secretsCacheExpiration: Date | null = null;
+
   public constructor(options?: IConfigOptions) {
     this.init(options);
   }
@@ -25,6 +33,9 @@ export default class Config {
     this.values = {};
     this.normalizedValues = {};
     this.customValues = {};
+    this.secretsToken = null;
+    this.secretsCache = {};
+    this.secretsCacheExpiration = null;
 
     let defaultConfigDir = "config";
     let defaultConfigEnv = "default";
@@ -153,6 +164,98 @@ export default class Config {
     }
 
     return obj as T;
+  }
+
+  public async refreshSecrets(): Promise<void> {
+    const provider = GetSecretsProvider(this.normalizedValues.secrets.provider);
+
+    if (
+      this.secretsToken === null ||
+      this.secretsToken.expires.getTime() < Date.now() + 500
+    ) {
+      this.secretsToken = await provider.getAuthToken();
+    }
+
+    this.secretsCache = await provider.getSecrets(
+      this,
+      this.secretsToken.value
+    );
+    this.secretsCacheExpiration = new Date(
+      Date.now() + this.get<number>("secrets.cache-duration-seconds") * 1000
+    );
+  }
+
+  public async getWithSecrets<T>(key: string): Promise<T> {
+    let value = this.get<T>(key);
+
+    const provider = this.normalizedValues.secrets?.provider;
+    if (typeof provider === "string" && provider !== SecretsProviderType.None) {
+      value = await this.processSecrets(value);
+    }
+
+    return value;
+  }
+
+  public async processSecrets<T>(v: T): Promise<T> {
+    if (
+      typeof this.normalizedValues.secrets?.provider === "undefined" ||
+      (typeof this.normalizedValues.secrets?.provider === "string" &&
+        this.normalizedValues.secrets.provider === SecretsProviderType.None)
+    ) {
+      return v;
+    }
+
+    if (typeof v === "string" && v.startsWith("secret|")) {
+      const secretKey = v.slice(7);
+
+      const provider = GetSecretsProvider(
+        this.normalizedValues.secrets.provider
+      );
+
+      if (
+        this.secretsToken === null ||
+        this.secretsToken.expires.getTime() < Date.now() + 500
+      ) {
+        this.secretsToken = await provider.getAuthToken();
+      }
+
+      if (
+        this.secretsCacheExpiration === null ||
+        this.secretsCacheExpiration < new Date() ||
+        this.secretsCache[secretKey] === undefined
+      ) {
+        this.secretsCache = await provider.getSecrets(
+          this,
+          this.secretsToken.value
+        );
+        this.secretsCacheExpiration = new Date(
+          Date.now() + this.get<number>("secrets.cache-duration-seconds") * 1000
+        );
+      }
+
+      if (this.secretsCache[secretKey] === undefined) {
+        throw new Error(`Secret ${secretKey} not found`);
+      }
+
+      return this.secretsCache[secretKey] as T;
+    } else if (typeof v === "object" && v !== null) {
+      if (Array.isArray(v)) {
+        const newObjs: any[] = [];
+        for (const value of v) {
+          newObjs.push(await this.processSecrets(value));
+        }
+        return newObjs as T;
+      } else {
+        const newObj: any = {};
+        for (const key of Object.keys(v)) {
+          const value = (v as any)[key];
+          newObj[key] = await this.processSecrets(value);
+        }
+        return newObj as T;
+      }
+    }
+
+    return v;
   }
 
   public normalizeString(value: string, currentPath: string[]): string {
