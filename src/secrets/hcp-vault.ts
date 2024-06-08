@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Config from "../config";
 import { ISecretsProvider, ISecretsToken } from "./provider";
 
@@ -27,25 +27,31 @@ export interface IHcpVaultSecret {
 
 export class HcpVaultSecretsProvider implements ISecretsProvider {
   public async getAuthToken(): Promise<ISecretsToken> {
-    const response = await axios.post(
-      "https://auth.idp.hashicorp.com/oauth2/token",
-      {
-        client_id: process.env.HCP_CLIENT_ID,
-        client_secret: process.env.HCP_CLIENT_SECRET,
-        grant_type: "client_credentials",
-        audience: "https://api.hashicorp.cloud",
-      },
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+    try {
+      const response = await axios.post(
+        "https://auth.idp.hashicorp.com/oauth2/token",
+        {
+          client_id: process.env.HCP_CLIENT_ID,
+          client_secret: process.env.HCP_CLIENT_SECRET,
+          grant_type: "client_credentials",
+          audience: "https://api.hashicorp.cloud",
         },
-      }
-    );
-
-    return {
-      value: response.data.access_token,
-      expires: new Date(Date.now() + response.data.expires_in * 1000),
-    };
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
+      return {
+        value: response.data.access_token,
+        expires: new Date(Date.now() + response.data.expires_in * 1000),
+      };
+    } catch (error: any) {
+      const typedError = error as AxiosError;
+      throw new Error(
+        `Failed to get HCP Vault token: ${typedError.code}; did you set HCP_CLIENT_ID and HCP_CLIENT_SECRET?`
+      );
+    }
   }
 
   public async getSecrets(
