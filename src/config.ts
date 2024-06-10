@@ -102,6 +102,12 @@ export default class Config {
     );
 
     merge(this.values, defaultValues, envValues, overrideValues);
+
+    this.values = Loader.convertKebabToCamelCase(
+      this.values,
+      configFolderOptions
+    );
+
     this.normalizedValues = this.normalizeObject(this.values, []);
 
     // load the environment variables that are configured to be injected
@@ -156,11 +162,13 @@ export default class Config {
         return match.toUpperCase();
       });
 
-      if (typeof obj[newPart] === "undefined") {
+      if (typeof obj[newPart] === "undefined" && obj[part] === undefined) {
         throw new Error(`Could not find value for key ${keyParts.join(".")}`);
+      } else if (obj[newPart] === undefined && obj[part] !== undefined) {
+        obj = obj[part];
+      } else {
+        obj = obj[newPart];
       }
-
-      obj = obj[newPart];
     }
 
     return obj as T;
@@ -285,11 +293,13 @@ export default class Config {
           return match.toUpperCase();
         });
 
-        if (typeof obj[newPart] === "undefined") {
+        if (typeof obj[newPart] === "undefined" && obj[part] === undefined) {
           throw new Error(`Could not find value for key ${keyParts.join(".")}`);
+        } else if (obj[newPart] === undefined && obj[part] !== undefined) {
+          obj = obj[part];
+        } else {
+          obj = obj[newPart];
         }
-
-        obj = obj[newPart];
       }
 
       if (obj !== null) {

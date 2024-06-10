@@ -142,10 +142,6 @@ export class Loader {
       obj = {};
     }
 
-    if (typeof obj === "object" && obj !== null && !Array.isArray(obj)) {
-      obj = Loader.convertKebabToCamelCase(obj, options);
-    }
-
     return obj;
   }
 
