@@ -9,8 +9,17 @@ export interface IConfigOptions {
   configEnv?: string;
 }
 
+export interface IConfigSettings {
+  defaults?: {
+    dir?: string;
+    env?: string;
+  };
+  extraDirs?: string[];
+}
+
 export default class Config {
   private configDir: string = "";
+  private extraConfigDirs: string[] = [];
 
   private values: any;
   private normalizedValues: any;
@@ -40,7 +49,7 @@ export default class Config {
     let defaultConfigDir = "config";
     let defaultConfigEnv = "default";
     if (fs.existsSync(path.join(process.cwd(), "config-settings.json"))) {
-      const configSettings = JSON.parse(
+      const configSettings: IConfigSettings = JSON.parse(
         fs.readFileSync(
           path.join(process.cwd(), "config-settings.json"),
           "utf-8"
@@ -56,6 +65,10 @@ export default class Config {
           defaultConfigEnv = configSettings.defaults.env;
         }
       }
+
+      if (configSettings.extraDirs && Array.isArray(configSettings.extraDirs)) {
+        this.extraConfigDirs = configSettings.extraDirs;
+      }
     }
 
     this.configDir =
@@ -64,11 +77,13 @@ export default class Config {
         path.relative(process.cwd(), process.env["NODE_CONFIG_DIR"])) ||
       path.join(process.cwd(), defaultConfigDir);
 
-    const configEnvDir =
+    const configEnv =
       options?.configEnv || process.env["NODE_CONFIG_ENV"] || defaultConfigEnv;
 
+    const configEnvDir = this.configEnvDir(configEnv);
+
     const configFolderOptions = Loader.readConfigSettings(
-      path.join(this.configDir, configEnvDir)
+      configEnvDir || path.join(this.configDir, "default")
     );
 
     const defaultValues = Loader.loadRoot(
@@ -76,24 +91,13 @@ export default class Config {
       {
         ...configFolderOptions,
         parentNames: [],
-      }
+      },
+      this
     );
 
     let envValues: any = {};
     if (configEnvDir) {
-      if (fs.existsSync(path.join(this.configDir, configEnvDir))) {
-        envValues = Loader.loadRoot(
-          path.join(this.configDir, configEnvDir),
-          configFolderOptions
-        );
-      } else if (process.env["NODE_CONFIG_SKIP_ENV_WARNING"] !== "true") {
-        console.log(
-          `Cannot use config environment '${configEnvDir}' because ${path.join(
-            this.configDir,
-            configEnvDir
-          )} doesn't exist`
-        );
-      }
+      envValues = Loader.loadRoot(configEnvDir, configFolderOptions, this);
     }
 
     const overrideValues = Loader.loadFile(
@@ -127,6 +131,28 @@ export default class Config {
 
   public dir(): string {
     return this.configDir;
+  }
+
+  public configEnvDir(configEnv: string): string | null {
+    if (fs.existsSync(path.join(this.configDir, configEnv))) {
+      return path.join(this.configDir, configEnv);
+    }
+
+    for (const extraDir of this.extraConfigDirs) {
+      if (fs.existsSync(path.join(extraDir, configEnv))) {
+        return path.join(extraDir, configEnv);
+      }
+    }
+
+    if (process.env["NODE_CONFIG_SKIP_ENV_WARNING"] !== "true") {
+      console.warn(
+        `Cannot find config environment ${configEnv} in ${
+          this.configDir
+        } or extra dirs: ${this.extraConfigDirs.join(", ")}`
+      );
+    }
+
+    return null;
   }
 
   public getConfiguredEnv(): any {

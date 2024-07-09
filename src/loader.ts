@@ -4,6 +4,7 @@ import { parse as parseJsonc } from "jsonc-parser";
 import JSON5 from "json5";
 import YAML from "js-yaml";
 import merge from "lodash.merge";
+import Config from "./config";
 
 export interface IConfigFolderOptions {
   variableCasing?: "original" | "camel" | "both";
@@ -145,7 +146,11 @@ export class Loader {
     return obj;
   }
 
-  public static loadRoot(folder: string, options: IConfigFolderOptions): any {
+  public static loadRoot(
+    folder: string,
+    options: IConfigFolderOptions,
+    config: Config
+  ): any {
     const baseObj: any = {};
 
     if (options.parentNames) {
@@ -154,15 +159,22 @@ export class Loader {
           // skip explicitly stated default parents; they're already loaded
           continue;
         }
-        const parentFolder = path.join(folder, "..", parentName);
-        const parentOptions = Loader.readConfigSettings(parentFolder);
-        merge(
-          baseObj,
-          Loader.loadRoot(parentFolder, {
-            ...options,
-            parentNames: parentOptions.parentNames,
-          })
-        );
+        const parentFolder = config.configEnvDir(parentName);
+
+        if (parentFolder) {
+          const parentOptions = Loader.readConfigSettings(parentFolder);
+          merge(
+            baseObj,
+            Loader.loadRoot(
+              parentFolder,
+              {
+                ...options,
+                parentNames: parentOptions.parentNames,
+              },
+              config
+            )
+          );
+        }
       }
     }
 
