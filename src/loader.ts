@@ -9,6 +9,7 @@ import Config from "./config";
 export interface IConfigFolderOptions {
   variableCasing?: "original" | "camel" | "both";
   parentNames?: string[];
+  loadedNames?: string[];
 }
 
 export class Loader {
@@ -162,6 +163,10 @@ export class Loader {
         const parentFolder = config.configEnvDir(parentName);
 
         if (parentFolder) {
+          if (options.loadedNames?.includes(parentName)) {
+            continue;
+          }
+
           const parentOptions = Loader.readConfigSettings(parentFolder);
           merge(
             baseObj,
@@ -170,6 +175,9 @@ export class Loader {
               {
                 ...options,
                 parentNames: parentOptions.parentNames,
+                loadedNames: options.loadedNames
+                  ? [...options.loadedNames, parentName]
+                  : [parentName],
               },
               config
             )
