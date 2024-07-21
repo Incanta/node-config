@@ -95,7 +95,10 @@ export default class Config {
       this
     );
 
-    let envValues: any = {};
+    let envValues: { data: any; loadedNames: string[] } = {
+      data: {},
+      loadedNames: [],
+    };
     if (configEnvDir) {
       envValues = Loader.loadRoot(configEnvDir, configFolderOptions, this);
     }
@@ -105,7 +108,7 @@ export default class Config {
       {}
     );
 
-    merge(this.values, defaultValues, envValues, overrideValues);
+    merge(this.values, defaultValues.data, envValues.data, overrideValues);
 
     this.values = Loader.convertKebabToCamelCase(
       this.values,

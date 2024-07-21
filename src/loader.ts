@@ -151,8 +151,10 @@ export class Loader {
     folder: string,
     options: IConfigFolderOptions,
     config: Config
-  ): any {
+  ): { data: any; loadedNames: string[] } {
     const baseObj: any = {};
+    const loadedNames = options.loadedNames || [];
+    loadedNames.push(folder);
 
     if (options.parentNames) {
       for (const parentName of options.parentNames) {
@@ -160,35 +162,39 @@ export class Loader {
           // skip explicitly stated default parents; they're already loaded
           continue;
         }
+        if (options.loadedNames?.includes(parentName)) {
+          continue;
+        }
+
         const parentFolder = config.configEnvDir(parentName);
 
         if (parentFolder) {
-          if (options.loadedNames?.includes(parentName)) {
-            continue;
-          }
-
           const parentOptions = Loader.readConfigSettings(parentFolder);
-          merge(
-            baseObj,
-            Loader.loadRoot(
-              parentFolder,
-              {
-                ...options,
-                parentNames: parentOptions.parentNames,
-                loadedNames: options.loadedNames
-                  ? [...options.loadedNames, parentName]
-                  : [parentName],
-              },
-              config
-            )
+
+          loadedNames.push(parentName);
+
+          const parentResult = Loader.loadRoot(
+            parentFolder,
+            {
+              ...options,
+              parentNames: parentOptions.parentNames,
+              loadedNames,
+            },
+            config
           );
+
+          merge(baseObj, parentResult.data);
+          loadedNames.push(...parentResult.loadedNames);
         }
       }
     }
 
     merge(baseObj, Loader.load(folder, options));
 
-    return baseObj;
+    return {
+      data: baseObj,
+      loadedNames,
+    };
   }
 
   public static load(folder: string, options: IConfigFolderOptions): any {
