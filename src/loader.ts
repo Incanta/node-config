@@ -153,8 +153,8 @@ export class Loader {
     config: Config
   ): { data: any; loadedNames: string[] } {
     const baseObj: any = {};
-    const loadedNames = options.loadedNames || [];
-    loadedNames.push(folder);
+    let loadedNames = options.loadedNames || [];
+    loadedNames.push(path.basename(folder));
 
     if (options.parentNames) {
       for (const parentName of options.parentNames) {
@@ -162,7 +162,7 @@ export class Loader {
           // skip explicitly stated default parents; they're already loaded
           continue;
         }
-        if (options.loadedNames?.includes(parentName)) {
+        if (loadedNames.includes(parentName)) {
           continue;
         }
 
@@ -170,8 +170,6 @@ export class Loader {
 
         if (parentFolder) {
           const parentOptions = Loader.readConfigSettings(parentFolder);
-
-          loadedNames.push(parentName);
 
           const parentResult = Loader.loadRoot(
             parentFolder,
@@ -184,7 +182,7 @@ export class Loader {
           );
 
           merge(baseObj, parentResult.data);
-          loadedNames.push(...parentResult.loadedNames);
+          loadedNames = parentResult.loadedNames;
         }
       }
     }
