@@ -3,8 +3,9 @@ import path from "path";
 import { parse as parseJsonc } from "jsonc-parser";
 import JSON5 from "json5";
 import YAML from "js-yaml";
-import merge from "lodash.merge";
+import mergeWith from "lodash.mergewith";
 import Config from "./config";
+import { mergeWithCustomizer } from "./merge-customizer";
 
 export interface IConfigFolderOptions {
   variableCasing?: "original" | "camel" | "both";
@@ -181,13 +182,13 @@ export class Loader {
             config
           );
 
-          merge(baseObj, parentResult.data);
+          mergeWith(baseObj, parentResult.data, mergeWithCustomizer);
           loadedNames = parentResult.loadedNames;
         }
       }
     }
 
-    merge(baseObj, Loader.load(folder, options));
+    mergeWith(baseObj, Loader.load(folder, options), mergeWithCustomizer);
 
     return {
       data: baseObj,
@@ -210,9 +211,10 @@ export class Loader {
     // first load the index file
     for (const content of contents) {
       if (!content.isDirectory() && /^_?index\./.exec(content.name) !== null) {
-        merge(
+        mergeWith(
           baseObj,
-          Loader.loadFile(path.join(folder, content.name), options)
+          Loader.loadFile(path.join(folder, content.name), options),
+          mergeWithCustomizer
         );
       }
     }
@@ -233,7 +235,7 @@ export class Loader {
 
         const obj = Loader.load(path.join(folder, content.name), options);
 
-        merge(baseObj[key], obj);
+        mergeWith(baseObj[key], obj, mergeWithCustomizer);
       } else {
         if (/^_?index\./.exec(content.name) !== null) {
           // we already loaded this to be be in the base config
@@ -250,7 +252,7 @@ export class Loader {
 
           const obj = Loader.loadFile(path.join(folder, content.name), options);
 
-          merge(baseObj[key], obj);
+          mergeWith(baseObj[key], obj, mergeWithCustomizer);
         } else {
           console.log(
             `Invalid file name ${content.name}. Config files must have a supported extension and contain no extra periods in the file name`

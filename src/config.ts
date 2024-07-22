@@ -1,8 +1,9 @@
-import merge from "lodash.merge";
+import mergeWith from "lodash.mergewith";
 import path from "path";
 import fs from "fs";
 import { Loader } from "./loader";
 import { GetSecretsProvider, SecretsProviderType } from "./secrets/provider";
+import { mergeWithCustomizer } from "./merge-customizer";
 
 export interface IConfigOptions {
   configDir?: string;
@@ -108,7 +109,13 @@ export default class Config {
       {}
     );
 
-    merge(this.values, defaultValues.data, envValues.data, overrideValues);
+    mergeWith(
+      this.values,
+      defaultValues.data,
+      envValues.data,
+      overrideValues,
+      mergeWithCustomizer
+    );
 
     this.values = Loader.convertKebabToCamelCase(
       this.values,
@@ -183,7 +190,7 @@ export default class Config {
       throw new Error("Cannot use an empty key");
     }
 
-    let obj = merge({}, this.normalizedValues);
+    let obj = mergeWith({}, this.normalizedValues, mergeWithCustomizer);
 
     for (const part of keyParts) {
       // convert to camelCase first
@@ -313,7 +320,7 @@ export default class Config {
         keyToFetchValue = key;
       }
 
-      let obj = merge({}, this.values);
+      let obj = mergeWith({}, this.values, mergeWithCustomizer);
 
       const keyParts = keyToFetchValue.split(".");
       for (const part of keyParts) {
@@ -366,7 +373,7 @@ export default class Config {
       return obj;
     }
 
-    const newObj = merge({}, obj);
+    const newObj = mergeWith({}, obj, mergeWithCustomizer);
 
     for (const property of Object.keys(newObj)) {
       const value = newObj[property];
@@ -399,7 +406,7 @@ export default class Config {
   }
 
   public getJson(): any {
-    const values = merge({}, this.normalizedValues);
+    const values = mergeWith({}, this.normalizedValues, mergeWithCustomizer);
 
     return values;
   }
@@ -421,7 +428,7 @@ export default class Config {
 
     obj[keyParts[keyParts.length - 1]] = value;
 
-    merge(this.customValues, obj);
+    mergeWith(this.customValues, obj, mergeWithCustomizer);
   }
 
   public async save(): Promise<void> {

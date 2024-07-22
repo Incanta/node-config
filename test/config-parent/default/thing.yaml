@@ -1,3 +1,4 @@
 test: 1
 foo: bar
 name: bob
+var: [1, 2, 3]

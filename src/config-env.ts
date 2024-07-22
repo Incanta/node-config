@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
 import { execSync } from "child_process";
-import merge from "lodash.merge";
+import mergeWith from "lodash.mergewith";
 import config from "./index";
+import { mergeWithCustomizer } from "./merge-customizer";
 
 const command = process.argv.slice(2).join(" ");
 
 const env: any = {};
 
-merge(env, process.env, config.getConfiguredEnv());
+mergeWith(env, process.env, config.getConfiguredEnv(), mergeWithCustomizer);
 
 execSync(command, {
   env,

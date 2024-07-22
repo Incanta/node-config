@@ -22,6 +22,7 @@ describe("Config with a specified parent", () => {
     expect(config.get<number>("thing.test")).toBe(3);
     expect(config.get<string>("thing.foo")).toBe("nobar");
     expect(config.get<string>("thing.name")).toBe("alice");
+    expect(config.get<number[]>("thing.var")).toStrictEqual([4, 5]);
   });
 
   test("correctly loaded grandchild", () => {
