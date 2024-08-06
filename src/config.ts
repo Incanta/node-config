@@ -8,6 +8,7 @@ import { mergeWithCustomizer } from "./merge-customizer";
 export interface IConfigOptions {
   configDir?: string;
   configEnv?: string;
+  cwd?: string;
 }
 
 export interface IConfigSettings {
@@ -49,12 +50,10 @@ export default class Config {
 
     let defaultConfigDir = "config";
     let defaultConfigEnv = "default";
-    if (fs.existsSync(path.join(process.cwd(), "config-settings.json"))) {
+    const cwd = options?.cwd || process.cwd();
+    if (fs.existsSync(path.join(cwd, "config-settings.json"))) {
       const configSettings: IConfigSettings = JSON.parse(
-        fs.readFileSync(
-          path.join(process.cwd(), "config-settings.json"),
-          "utf-8"
-        )
+        fs.readFileSync(path.join(cwd, "config-settings.json"), "utf-8")
       );
 
       if (configSettings.defaults) {
@@ -75,8 +74,8 @@ export default class Config {
     this.configDir =
       options?.configDir ||
       (process.env["NODE_CONFIG_DIR"] &&
-        path.relative(process.cwd(), process.env["NODE_CONFIG_DIR"])) ||
-      path.join(process.cwd(), defaultConfigDir);
+        path.relative(cwd, process.env["NODE_CONFIG_DIR"])) ||
+      path.join(cwd, defaultConfigDir);
 
     const configEnv =
       options?.configEnv || process.env["NODE_CONFIG_ENV"] || defaultConfigEnv;
