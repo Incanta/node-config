@@ -158,6 +158,12 @@ export class Loader {
     loadedNames.push(path.basename(folder));
 
     if (options.parentNames) {
+      if (typeof options.parentNames === "string") {
+        throw new Error(
+          "parentNames should be an array of strings, not a single string"
+        );
+      }
+
       for (const parentName of options.parentNames) {
         if (parentName === "default") {
           // skip explicitly stated default parents; they're already loaded
