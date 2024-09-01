@@ -59,6 +59,10 @@ export class Loader {
     }
 
     for (const key of Object.keys(obj)) {
+      if (key === "variableCasing") {
+        continue;
+      }
+
       const newKey = key.replace(/-([a-zA-Z0-9])/g, function (_, match) {
         return match.toUpperCase();
       });
