@@ -21,6 +21,7 @@ export interface IConfigSettings {
 
 export default class Config {
   private configDir: string = "";
+  private configEnv: string = "";
   private extraConfigDirs: string[] = [];
 
   private values: any;
@@ -77,10 +78,10 @@ export default class Config {
         path.relative(cwd, process.env["NODE_CONFIG_DIR"])) ||
       path.join(cwd, defaultConfigDir);
 
-    const configEnv =
+    this.configEnv =
       options?.configEnv || process.env["NODE_CONFIG_ENV"] || defaultConfigEnv;
 
-    const configEnvDir = this.configEnvDir(configEnv);
+    const configEnvDir = this.configEnvDir(this.configEnv);
 
     const configFolderOptions = Loader.readConfigSettings(
       configEnvDir || path.join(this.configDir, "default")
@@ -140,6 +141,10 @@ export default class Config {
 
   public dir(): string {
     return this.configDir;
+  }
+
+  public env(): string {
+    return this.configEnv;
   }
 
   public configEnvDir(configEnv: string): string | null {
