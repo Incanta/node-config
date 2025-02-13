@@ -159,10 +159,14 @@ export default class Config {
     }
 
     if (process.env["NODE_CONFIG_SKIP_ENV_WARNING"] !== "true") {
-      console.warn(
-        `Cannot find config environment ${configEnv} in ${
+      console.error(
+        `\nERROR: Cannot find config environment "${configEnv}" in ${
           this.configDir
-        } or extra dirs: ${this.extraConfigDirs.join(", ")}`
+        } or configured extra dirs: [${this.extraConfigDirs.join(
+          ", "
+        )}].\nThis error is for a **single environment folder**; ` +
+          `if you see multiple folders listed in this error, you likely have a typo "parentNames" (i.e. ["parent 1, parent 2"] instead of ["parent 1", "parent 2"]).\n` +
+          `We're continuing on with the default environment folder, but this is likely an error for you.\n`
       );
     }
 
