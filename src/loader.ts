@@ -190,7 +190,7 @@ export class Loader {
               parentNames: parentOptions.parentNames,
               loadedNames,
               existingObj: {
-                ...baseObj,
+                ...options.existingObj,
               },
             },
             config

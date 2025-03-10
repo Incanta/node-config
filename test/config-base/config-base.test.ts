@@ -5,7 +5,7 @@ import path from "path";
 describe("Config with inherited base file", () => {
   const config = new Config({
     configDir: path.join(__dirname),
-    configEnv: "local",
+    configEnv: "child",
   });
 
   test("correctly loaded base object", () => {
@@ -21,5 +21,10 @@ describe("Config with inherited base file", () => {
   test("correctly loaded custom object", () => {
     expect(config.get<string>("instances.custom.foo")).toBe("bar");
     expect(config.get<string>("instances.custom.hello")).toBe("city");
+  });
+
+  test("correctly loaded child object", () => {
+    expect(config.get<string>("instances.child.foo")).toBe("bar");
+    expect(config.get<string>("instances.child.hello")).toBe("town");
   });
 });
