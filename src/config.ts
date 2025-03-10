@@ -101,7 +101,14 @@ export default class Config {
       loadedNames: [],
     };
     if (configEnvDir) {
-      envValues = Loader.loadRoot(configEnvDir, configFolderOptions, this);
+      envValues = Loader.loadRoot(
+        configEnvDir,
+        {
+          ...configFolderOptions,
+          existingObj: defaultValues.data,
+        },
+        this
+      );
     }
 
     const overrideValues = Loader.loadFile(

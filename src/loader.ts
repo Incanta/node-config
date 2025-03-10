@@ -11,6 +11,7 @@ export interface IConfigFolderOptions {
   variableCasing?: "original" | "camel" | "both";
   parentNames?: string[];
   loadedNames?: string[];
+  existingObj?: any;
 }
 
 export class Loader {
@@ -188,6 +189,9 @@ export class Loader {
               ...options,
               parentNames: parentOptions.parentNames,
               loadedNames,
+              existingObj: {
+                ...baseObj,
+              },
             },
             config
           );
@@ -229,6 +233,30 @@ export class Loader {
       }
     }
 
+    // load the base config for other files to copy before merging
+    if (typeof baseObj.incantaConfigBase === "string") {
+      const baseFolder = contents.find((content) =>
+        content.name.startsWith(`${baseObj.incantaConfigBase}.`)
+      );
+
+      if (baseFolder) {
+        const incantaConfigBaseObj = Loader.loadFile(
+          path.join(folder, baseFolder.name),
+          options
+        );
+
+        if (typeof baseObj[baseObj.incantaConfigBase] === "undefined") {
+          baseObj[baseObj.incantaConfigBase] = {};
+        }
+
+        mergeWith(
+          baseObj[baseObj.incantaConfigBase],
+          incantaConfigBaseObj,
+          mergeWithCustomizer
+        );
+      }
+    }
+
     // then load other files
     for (const content of contents) {
       // skip git meta files (.gitignore, .gitattributes, etc)
@@ -243,7 +271,10 @@ export class Loader {
           baseObj[key] = {};
         }
 
-        const obj = Loader.load(path.join(folder, content.name), options);
+        const obj = Loader.load(path.join(folder, content.name), {
+          ...options,
+          existingObj: options.existingObj?.[key] || {},
+        });
 
         mergeWith(baseObj[key], obj, mergeWithCustomizer);
       } else {
@@ -262,7 +293,17 @@ export class Loader {
 
           const obj = Loader.loadFile(path.join(folder, content.name), options);
 
-          mergeWith(baseObj[key], obj, mergeWithCustomizer);
+          mergeWith(
+            baseObj[key],
+            baseObj.incantaConfigBase
+              ? baseObj[baseObj.incantaConfigBase] || {}
+              : {},
+            options.existingObj?.incantaConfigBase
+              ? options.existingObj[options.existingObj.incantaConfigBase] || {}
+              : {},
+            obj,
+            mergeWithCustomizer
+          );
         } else {
           console.log(
             `Invalid file name ${content.name}. Config files must have a supported extension and contain no extra periods in the file name`
