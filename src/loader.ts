@@ -301,6 +301,9 @@ export class Loader {
             options.existingObj?.incantaConfigBase
               ? options.existingObj[options.existingObj.incantaConfigBase] || {}
               : {},
+            options.existingObj?.incantaConfigBase
+              ? options.existingObj[key] || {}
+              : {},
             obj,
             mergeWithCustomizer
           );
