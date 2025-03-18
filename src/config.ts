@@ -124,6 +124,25 @@ export default class Config {
       mergeWithCustomizer
     );
 
+    const applyBases = (obj: any, currentPath: string[] = []): void => {
+      for (const key of Object.keys(obj)) {
+        if (key === "incantaConfigBase") {
+          const baseName = obj[key];
+          const baseValue = obj[baseName];
+
+          for (const objKey in obj) {
+            if (objKey !== key && objKey !== baseName) {
+              obj[objKey] = mergeWith({}, baseValue, obj[objKey]);
+            }
+          }
+        } else if (typeof obj[key] === "object" && obj[key] !== null) {
+          applyBases(obj[key], [...currentPath, key]);
+        }
+      }
+    };
+
+    applyBases(this.values);
+
     this.values = Loader.convertKebabToCamelCase(
       this.values,
       configFolderOptions

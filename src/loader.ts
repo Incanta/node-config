@@ -293,20 +293,7 @@ export class Loader {
 
           const obj = Loader.loadFile(path.join(folder, content.name), options);
 
-          mergeWith(
-            baseObj[key],
-            baseObj.incantaConfigBase
-              ? baseObj[baseObj.incantaConfigBase] || {}
-              : {},
-            options.existingObj?.incantaConfigBase
-              ? options.existingObj[options.existingObj.incantaConfigBase] || {}
-              : {},
-            options.existingObj?.incantaConfigBase
-              ? options.existingObj[key] || {}
-              : {},
-            obj,
-            mergeWithCustomizer
-          );
+          mergeWith(baseObj[key], obj, mergeWithCustomizer);
         } else {
           console.log(
             `Invalid file name ${content.name}. Config files must have a supported extension and contain no extra periods in the file name`
