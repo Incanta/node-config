@@ -143,6 +143,18 @@ export default class Config {
 
     applyBases(this.values);
 
+    const removeIncantaConfigBase = (obj: any): void => {
+      for (const key of Object.keys(obj)) {
+        if (key === "incantaConfigBase") {
+          delete obj[key];
+        } else if (typeof obj[key] === "object" && obj[key] !== null) {
+          removeIncantaConfigBase(obj[key]);
+        }
+      }
+    };
+
+    removeIncantaConfigBase(this.values);
+
     this.values = Loader.convertKebabToCamelCase(
       this.values,
       configFolderOptions
