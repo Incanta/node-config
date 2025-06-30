@@ -3,3 +3,4 @@ secrets:
 
   gcp-secret-manager:
     project-id: "redwood-464500"
+    credentials-file: "gcp-credentials.json"

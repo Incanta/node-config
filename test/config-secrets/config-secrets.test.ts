@@ -74,8 +74,6 @@ describe.skip("Config with secrets", () => {
   });
 
   describe("with GCP Secret Manager", () => {
-    process.env["GOOGLE_APPLICATION_CREDENTIALS"] = "TODO";
-
     const config = new Config({
       configDir: path.join(__dirname),
       configEnv: "gcp-secret-manager",
