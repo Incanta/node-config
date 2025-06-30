@@ -8,3 +8,4 @@ test
 jest.config.js
 tsconfig.json
 tsconfig.tsbuildinfo
+gcp-credentials.json
