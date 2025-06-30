@@ -4,5 +4,6 @@ secrets:
   vault:
     endpoint: "http://10.0.0.5:8200"
     namespace: ""
+    path-prefix: ""
     kv-engine: "v1"
     engine-name: "test-v1"

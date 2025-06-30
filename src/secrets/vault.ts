@@ -39,12 +39,13 @@ export class VaultSecretsProvider implements ISecretsProvider {
   ): Promise<string> {
     const kvEngine = config.get<VaultKvEngine>("secrets.vault.kv-engine");
     const engineName = config.get<string>("secrets.vault.engine-name");
+    const pathPrefix = config.get<string>("secrets.vault.path-prefix");
 
     if (kvEngine === VaultKvEngine.V1) {
       const response = await axios.get(
         `${config.get<string>(
           "secrets.vault.endpoint"
-        )}/v1/${engineName}/${name}`,
+        )}/v1/${engineName}/${pathPrefix}${name}`,
         {
           headers: {
             "X-Vault-Token": token,
@@ -68,7 +69,7 @@ export class VaultSecretsProvider implements ISecretsProvider {
       const response = await axios.get(
         `${config.get<string>(
           "secrets.vault.endpoint"
-        )}/v1/${engineName}/data/${name}`,
+        )}/v1/${engineName}/data/${pathPrefix}${name}`,
         {
           headers: {
             "X-Vault-Token": token,
