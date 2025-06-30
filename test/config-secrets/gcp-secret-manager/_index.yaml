@@ -1,0 +1,5 @@
+secrets:
+  provider: "gcp-secret-manager"
+
+  gcp-secret-manager:
+    project-id: "redwood-464500"

@@ -1,6 +1,6 @@
 {
   "name": "@incanta/config",
-  "version": "0.6.5",
+  "version": "2.0.0",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
@@ -18,6 +18,10 @@
     "test": "jest"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.839.0",
+    "@azure/identity": "^4.10.1",
+    "@azure/keyvault-secrets": "^4.10.0",
+    "@google-cloud/secret-manager": "^6.0.1",
     "axios": "^1.8.2",
     "js-yaml": "^4.1.0",
     "json5": "^2.2.3",

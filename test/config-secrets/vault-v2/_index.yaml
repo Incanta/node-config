@@ -1,0 +1,8 @@
+secrets:
+  provider: "vault"
+
+  vault:
+    endpoint: "http://10.0.0.5:8200"
+    namespace: ""
+    kv-engine: "v2"
+    engine-name: "test-v2"

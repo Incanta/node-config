@@ -1,0 +1,5 @@
+hello: "secret|mysecret"
+
+secrets:
+  provider: "none"
+  cache-duration-seconds: 1800

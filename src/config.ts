@@ -19,6 +19,11 @@ export interface IConfigSettings {
   extraDirs?: string[];
 }
 
+interface ISecret {
+  value: string;
+  expires: Date;
+}
+
 export default class Config {
   private configDir: string = "";
   private configEnv: string = "";
@@ -34,8 +39,7 @@ export default class Config {
     value: string;
     expires: Date;
   } | null = null;
-  private secretsCache: Record<string, any> = {};
-  private secretsCacheExpiration: Date | null = null;
+  private secretsCache: Record<string, ISecret> = {};
 
   public constructor(options?: IConfigOptions) {
     this.init(options);
@@ -47,7 +51,6 @@ export default class Config {
     this.customValues = {};
     this.secretsToken = null;
     this.secretsCache = {};
-    this.secretsCacheExpiration = null;
 
     let defaultConfigDir = "config";
     let defaultConfigEnv = "default";
@@ -256,25 +259,6 @@ export default class Config {
     return obj as T;
   }
 
-  public async refreshSecrets(): Promise<void> {
-    const provider = GetSecretsProvider(this.normalizedValues.secrets.provider);
-
-    if (
-      this.secretsToken === null ||
-      this.secretsToken.expires.getTime() < Date.now() + 500
-    ) {
-      this.secretsToken = await provider.getAuthToken();
-    }
-
-    this.secretsCache = await provider.getSecrets(
-      this,
-      this.secretsToken.value
-    );
-    this.secretsCacheExpiration = new Date(
-      Date.now() + this.get<number>("secrets.cache-duration-seconds") * 1000
-    );
-  }
-
   public async getWithSecrets<T>(key: string): Promise<T> {
     let value = this.get<T>(key);
 
@@ -306,28 +290,33 @@ export default class Config {
         this.secretsToken === null ||
         this.secretsToken.expires.getTime() < Date.now() + 500
       ) {
-        this.secretsToken = await provider.getAuthToken();
+        this.secretsToken = await provider.getAuthToken(this);
       }
 
       if (
-        this.secretsCacheExpiration === null ||
-        this.secretsCacheExpiration < new Date() ||
-        this.secretsCache[secretKey] === undefined
+        this.secretsCache[secretKey] === undefined ||
+        this.secretsCache[secretKey].expires < new Date()
       ) {
-        this.secretsCache = await provider.getSecrets(
+        const secretValue = await provider.getSecret(
           this,
-          this.secretsToken.value
+          this.secretsToken.value,
+          secretKey
         );
-        this.secretsCacheExpiration = new Date(
-          Date.now() + this.get<number>("secrets.cache-duration-seconds") * 1000
-        );
+
+        this.secretsCache[secretKey] = {
+          value: secretValue,
+          expires: new Date(
+            Date.now() +
+              this.get<number>("secrets.cache-duration-seconds") * 1000
+          ),
+        };
       }
 
       if (this.secretsCache[secretKey] === undefined) {
         throw new Error(`Secret ${secretKey} not found`);
       }
 
-      return this.secretsCache[secretKey] as T;
+      return this.secretsCache[secretKey].value as T;
     } else if (typeof v === "object" && v !== null) {
       if (Array.isArray(v)) {
         const newObjs: any[] = [];

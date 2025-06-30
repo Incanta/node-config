@@ -1,0 +1,5 @@
+secrets:
+  provider: "azure-key-vault"
+
+  azure-key-vault:
+    endpoint: "https://redwoodtest.vault.azure.net/"

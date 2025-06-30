@@ -20,10 +20,12 @@ describe("Config with env folder", () => {
   });
 
   test("correctly shows default value for invalid env directory", () => {
+    process.env["NODE_CONFIG_SKIP_ENV_WARNING"] = "true";
     const config = new Config({
       configDir: path.join(__dirname),
       configEnv: "invalid",
     });
+    process.env["NODE_CONFIG_SKIP_ENV_WARNING"] = "false";
     expect(config.get<number>("thing.test")).toBe(1);
   });
 });
