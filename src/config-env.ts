@@ -5,7 +5,50 @@ import mergeWith from "lodash.mergewith";
 import config from "./index";
 import { mergeWithCustomizer } from "./merge-customizer";
 
-const command = process.argv.slice(2).join(" ");
+let command = process.argv.slice(2).join(" ");
+
+if (command.startsWith("--env=") || command.startsWith("-e=")) {
+  const isLongOption = command.startsWith("--env=");
+
+  const commandAfterEnv = command.substring(
+    command.indexOf(isLongOption ? "--env=" : "-e=") + 1
+  );
+
+  let env = "";
+  if (commandAfterEnv.startsWith('"') || commandAfterEnv.startsWith("'")) {
+    const quoteChar = commandAfterEnv[0];
+    // find next quoteChar, ensuring it wasn't escaped
+    let endQuoteIndex = -1;
+    let startQuoteIndex = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      endQuoteIndex = commandAfterEnv.indexOf(quoteChar, startQuoteIndex + 1);
+
+      if (endQuoteIndex !== -1 && commandAfterEnv[endQuoteIndex - 1] !== "\\") {
+        break;
+      }
+
+      if (endQuoteIndex === -1) {
+        throw new Error(
+          `Unmatched quote in command: ${commandAfterEnv}. Please ensure quotes are properly closed.`
+        );
+      }
+
+      startQuoteIndex = endQuoteIndex;
+    }
+
+    env = commandAfterEnv.substring(1, endQuoteIndex).trim();
+    command = commandAfterEnv.substring(endQuoteIndex + 1).trim();
+
+    config.init({
+      configDir: config.dir(),
+      configEnv: env,
+      cwd: config.cwd(),
+    });
+  } else {
+    command = commandAfterEnv.trim();
+  }
+}
 
 const env: any = {};
 

@@ -27,6 +27,7 @@ interface ISecret {
 export default class Config {
   private configDir: string = "";
   private configEnv: string = "";
+  private configCwd: string = "";
   private extraConfigDirs: string[] = [];
 
   private values: any;
@@ -54,10 +55,13 @@ export default class Config {
 
     let defaultConfigDir = "config";
     let defaultConfigEnv = "default";
-    const cwd = options?.cwd || process.cwd();
-    if (fs.existsSync(path.join(cwd, "config-settings.json"))) {
+    this.configCwd = options?.cwd || process.cwd();
+    if (fs.existsSync(path.join(this.configCwd, "config-settings.json"))) {
       const configSettings: IConfigSettings = JSON.parse(
-        fs.readFileSync(path.join(cwd, "config-settings.json"), "utf-8")
+        fs.readFileSync(
+          path.join(this.configCwd, "config-settings.json"),
+          "utf-8"
+        )
       );
 
       if (configSettings.defaults) {
@@ -78,8 +82,8 @@ export default class Config {
     this.configDir =
       options?.configDir ||
       (process.env["NODE_CONFIG_DIR"] &&
-        path.relative(cwd, process.env["NODE_CONFIG_DIR"])) ||
-      path.join(cwd, defaultConfigDir);
+        path.relative(this.configCwd, process.env["NODE_CONFIG_DIR"])) ||
+      path.join(this.configCwd, defaultConfigDir);
 
     this.configEnv =
       options?.configEnv || process.env["NODE_CONFIG_ENV"] || defaultConfigEnv;
@@ -186,6 +190,10 @@ export default class Config {
 
   public env(): string {
     return this.configEnv;
+  }
+
+  public cwd(): string {
+    return this.configCwd;
   }
 
   public configEnvDir(configEnv: string): string | null {
