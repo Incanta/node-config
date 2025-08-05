@@ -11,7 +11,7 @@ if (command.startsWith("--env=") || command.startsWith("-e=")) {
   const isLongOption = command.startsWith("--env=");
 
   const commandAfterEnv = command.substring(
-    command.indexOf(isLongOption ? "--env=" : "-e=") + 1
+    command.indexOf(isLongOption ? "--env=" : "-e=") + (isLongOption ? 6 : 3)
   );
 
   let env = "";
@@ -46,7 +46,9 @@ if (command.startsWith("--env=") || command.startsWith("-e=")) {
       cwd: config.cwd(),
     });
   } else {
-    command = commandAfterEnv.trim();
+    const tokens = commandAfterEnv.split(" ");
+    env = tokens[0].trim();
+    command = tokens.slice(1).join(" ").trim();
   }
 }
 
