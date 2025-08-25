@@ -7,6 +7,7 @@ import { mergeWithCustomizer } from "./merge-customizer";
 
 let command = process.argv.slice(2).join(" ");
 
+let envName = "";
 if (command.startsWith("--env=") || command.startsWith("-e=")) {
   const isLongOption = command.startsWith("--env=");
 
@@ -14,7 +15,6 @@ if (command.startsWith("--env=") || command.startsWith("-e=")) {
     command.indexOf(isLongOption ? "--env=" : "-e=") + (isLongOption ? 6 : 3)
   );
 
-  let env = "";
   if (commandAfterEnv.startsWith('"') || commandAfterEnv.startsWith("'")) {
     const quoteChar = commandAfterEnv[0];
     // find next quoteChar, ensuring it wasn't escaped
@@ -37,22 +37,26 @@ if (command.startsWith("--env=") || command.startsWith("-e=")) {
       startQuoteIndex = endQuoteIndex;
     }
 
-    env = commandAfterEnv.substring(1, endQuoteIndex).trim();
+    envName = commandAfterEnv.substring(1, endQuoteIndex).trim();
     command = commandAfterEnv.substring(endQuoteIndex + 1).trim();
 
     config.init({
       configDir: config.dir(),
-      configEnv: env,
+      configEnv: envName,
       cwd: config.cwd(),
     });
   } else {
     const tokens = commandAfterEnv.split(" ");
-    env = tokens[0].trim();
+    envName = tokens[0].trim();
     command = tokens.slice(1).join(" ").trim();
   }
 }
 
 const env: any = {};
+
+if (envName) {
+  env.NODE_CONFIG_ENV = envName;
+}
 
 mergeWith(env, process.env, config.getConfiguredEnv(), mergeWithCustomizer);
 
