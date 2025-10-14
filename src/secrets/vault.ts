@@ -1,4 +1,3 @@
-import axios from "axios";
 import Config from "../config";
 import { ISecretsProvider, ISecretsToken } from "./provider";
 
@@ -12,23 +11,31 @@ export class VaultSecretsProvider implements ISecretsProvider {
     const endpoint = config.get<string>("secrets.vault.endpoint");
     const namespace = config.get<string>("secrets.vault.namespace");
 
-    const response = await axios.post(
-      `${endpoint}/v1/auth/approle/login`,
-      {
+    const response = await fetch(`${endpoint}/v1/auth/approle/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Vault-Namespace": namespace,
+      },
+      body: JSON.stringify({
         role_id: process.env.VAULT_ROLE_ID,
         secret_id: process.env.VAULT_SECRET_ID,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Vault-Namespace": namespace,
-        },
-      }
-    );
+      }),
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to authenticate with Vault: ${
+          responseData.errors?.join(", ") || response.statusText
+        }`
+      );
+    }
 
     return {
-      value: response.data.auth.client_token,
-      expires: new Date(Date.now() + response.data.auth.lease_duration * 1000),
+      value: responseData.auth.client_token,
+      expires: new Date(Date.now() + responseData.auth.lease_duration * 1000),
     };
   }
 
@@ -42,11 +49,12 @@ export class VaultSecretsProvider implements ISecretsProvider {
     const pathPrefix = config.get<string>("secrets.vault.path-prefix");
 
     if (kvEngine === VaultKvEngine.V1) {
-      const response = await axios.get(
+      const response = await fetch(
         `${config.get<string>(
           "secrets.vault.endpoint"
         )}/v1/${engineName}/${pathPrefix}${name}`,
         {
+          method: "GET",
           headers: {
             "X-Vault-Token": token,
             "X-Vault-Namespace": config.get<string>("secrets.vault.namespace"),
@@ -54,23 +62,30 @@ export class VaultSecretsProvider implements ISecretsProvider {
         }
       );
 
-      if (!response.data.data) {
+      if (!response.ok) {
+        throw new Error(`Failed to retrieve secret: ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+
+      if (!responseData.data) {
         throw new Error(`No data found at path: ${name}`);
       }
 
-      if (!response.data.data.value) {
+      if (!responseData.data.value) {
         throw new Error(
           `No key with name 'value' found in secret key/value at path: ${name}`
         );
       }
 
-      return response.data.data.value;
+      return responseData.data.value;
     } else if (kvEngine === VaultKvEngine.V2) {
-      const response = await axios.get(
+      const response = await fetch(
         `${config.get<string>(
           "secrets.vault.endpoint"
         )}/v1/${engineName}/data/${pathPrefix}${name}`,
         {
+          method: "GET",
           headers: {
             "X-Vault-Token": token,
             "X-Vault-Namespace": config.get<string>("secrets.vault.namespace"),
@@ -78,17 +93,27 @@ export class VaultSecretsProvider implements ISecretsProvider {
         }
       );
 
-      if (!response.data.data || !response.data.data.data) {
+      if (!response.ok) {
+        throw new Error(`Failed to retrieve secret: ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+
+      if (!responseData) {
         throw new Error(`No data found at path: ${name}`);
       }
 
-      if (!response.data.data.data.value) {
+      if (!responseData.data || !responseData.data.data) {
+        throw new Error(`No data found at path: ${name}`);
+      }
+
+      if (!responseData.data.data.value) {
         throw new Error(
           `No key with name 'value' found in secret key/value at path: ${name}`
         );
       }
 
-      return response.data.data.data.value;
+      return responseData.data.data.value;
     } else {
       throw new Error(`Unsupported Vault KV engine: ${kvEngine}`);
     }
