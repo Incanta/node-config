@@ -39,17 +39,17 @@ if (command.startsWith("--env=") || command.startsWith("-e=")) {
 
     envName = commandAfterEnv.substring(1, endQuoteIndex).trim();
     command = commandAfterEnv.substring(endQuoteIndex + 1).trim();
-
-    config.init({
-      configDir: config.dir(),
-      configEnv: envName,
-      cwd: config.cwd(),
-    });
   } else {
     const tokens = commandAfterEnv.split(" ");
     envName = tokens[0].trim();
     command = tokens.slice(1).join(" ").trim();
   }
+
+  config.init({
+    configDir: config.dir(),
+    configEnv: envName,
+    cwd: config.cwd(),
+  });
 }
 
 const env: any = {};
