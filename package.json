@@ -1,6 +1,6 @@
 {
   "name": "@incanta/config",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",

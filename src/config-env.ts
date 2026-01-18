@@ -58,9 +58,13 @@ if (envName) {
   env.NODE_CONFIG_ENV = envName;
 }
 
-mergeWith(env, process.env, config.getConfiguredEnv(), mergeWithCustomizer);
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+(async () => {
+  const configuredEnv = await config.processSecrets(config.getConfiguredEnv());
+  mergeWith(env, process.env, configuredEnv, mergeWithCustomizer);
 
-execSync(command, {
-  env,
-  stdio: "inherit",
-});
+  execSync(command, {
+    env,
+    stdio: "inherit",
+  });
+})();
