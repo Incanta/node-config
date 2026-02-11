@@ -202,8 +202,9 @@ export default class Config {
     }
 
     for (const extraDir of this.extraConfigDirs) {
-      if (fs.existsSync(path.join(extraDir, configEnv))) {
-        return path.join(extraDir, configEnv);
+      const fullExtraDir = path.resolve(this.configCwd, extraDir);
+      if (fs.existsSync(path.join(fullExtraDir, configEnv))) {
+        return path.join(fullExtraDir, configEnv);
       }
     }
 
@@ -211,9 +212,9 @@ export default class Config {
       console.error(
         `\nERROR: Cannot find config environment "${configEnv}" in ${
           this.configDir
-        } or configured extra dirs: [${this.extraConfigDirs.join(
-          ", "
-        )}].\nThis error is for a **single environment folder**; ` +
+        } or configured extra dirs: [${this.extraConfigDirs
+          .map((dir) => path.resolve(this.configCwd, dir))
+          .join(", ")}].\nThis error is for a **single environment folder**; ` +
           `if you see multiple folders listed in this error, you likely have a typo "parentNames" (i.e. ["parent 1, parent 2"] instead of ["parent 1", "parent 2"]).\n` +
           `We're continuing on with the default environment folder, but this is likely an error for you.\n`
       );
