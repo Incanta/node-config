@@ -17,6 +17,7 @@ export interface IConfigSettings {
     env?: string;
   };
   extraDirs?: string[];
+  overridePath?: string;
 }
 
 interface ISecret {
@@ -29,6 +30,7 @@ export default class Config {
   private configEnv: string = "";
   private configCwd: string = "";
   private extraConfigDirs: string[] = [];
+  private overridePath: string | null = null;
 
   private values: any;
   private normalizedValues: any;
@@ -56,6 +58,7 @@ export default class Config {
     let defaultConfigDir = "config";
     let defaultConfigEnv = "default";
     this.configCwd = options?.cwd || process.cwd();
+    this.overridePath = null;
     if (fs.existsSync(path.join(this.configCwd, "config-settings.json"))) {
       const configSettings: IConfigSettings = JSON.parse(
         fs.readFileSync(
@@ -76,6 +79,16 @@ export default class Config {
 
       if (configSettings.extraDirs && Array.isArray(configSettings.extraDirs)) {
         this.extraConfigDirs = configSettings.extraDirs;
+      }
+
+      if (configSettings.overridePath) {
+        const overridePath = path.resolve(
+          this.configCwd,
+          configSettings.overridePath
+        );
+        if (fs.existsSync(overridePath)) {
+          this.overridePath = overridePath;
+        }
       }
     }
 
@@ -119,7 +132,7 @@ export default class Config {
     }
 
     const overrideValues = Loader.loadFile(
-      path.join(this.configDir, "override.json"),
+      this.overridePath ?? path.join(this.configDir, "override.json"),
       {}
     );
 
