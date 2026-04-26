@@ -292,6 +292,41 @@ export default class Config {
     return value;
   }
 
+  private async resolveSecretKey(secretKey: string): Promise<string> {
+    const provider = GetSecretsProvider(this.normalizedValues.secrets.provider);
+
+    if (
+      this.secretsToken === null ||
+      this.secretsToken.expires.getTime() < Date.now() + 500
+    ) {
+      this.secretsToken = await provider.getAuthToken(this);
+    }
+
+    if (
+      this.secretsCache[secretKey] === undefined ||
+      this.secretsCache[secretKey].expires < new Date()
+    ) {
+      const secretValue = await provider.getSecret(
+        this,
+        this.secretsToken.value,
+        secretKey
+      );
+
+      this.secretsCache[secretKey] = {
+        value: secretValue,
+        expires: new Date(
+          Date.now() + this.get<number>("secrets.cache-duration-seconds") * 1000
+        ),
+      };
+    }
+
+    if (this.secretsCache[secretKey] === undefined) {
+      throw new Error(`Secret ${secretKey} not found`);
+    }
+
+    return this.secretsCache[secretKey].value;
+  }
+
   public async processSecrets<T>(v: T): Promise<T> {
     if (
       typeof this.normalizedValues.secrets?.provider === "undefined" ||
@@ -303,42 +338,16 @@ export default class Config {
 
     if (typeof v === "string" && v.startsWith("secret|")) {
       const secretKey = v.slice(7);
-
-      const provider = GetSecretsProvider(
-        this.normalizedValues.secrets.provider
-      );
-
-      if (
-        this.secretsToken === null ||
-        this.secretsToken.expires.getTime() < Date.now() + 500
-      ) {
-        this.secretsToken = await provider.getAuthToken(this);
+      return (await this.resolveSecretKey(secretKey)) as T;
+    } else if (typeof v === "string" && v.includes("(secret|")) {
+      const embeddedSecretRegex = /\(secret\|([^)]+)\)/g;
+      const matches = [...v.matchAll(embeddedSecretRegex)];
+      let result: string = v;
+      for (const match of matches) {
+        const secretValue = await this.resolveSecretKey(match[1]);
+        result = result.replace(match[0], secretValue);
       }
-
-      if (
-        this.secretsCache[secretKey] === undefined ||
-        this.secretsCache[secretKey].expires < new Date()
-      ) {
-        const secretValue = await provider.getSecret(
-          this,
-          this.secretsToken.value,
-          secretKey
-        );
-
-        this.secretsCache[secretKey] = {
-          value: secretValue,
-          expires: new Date(
-            Date.now() +
-              this.get<number>("secrets.cache-duration-seconds") * 1000
-          ),
-        };
-      }
-
-      if (this.secretsCache[secretKey] === undefined) {
-        throw new Error(`Secret ${secretKey} not found`);
-      }
-
-      return this.secretsCache[secretKey].value as T;
+      return result as unknown as T;
     } else if (typeof v === "object" && v !== null) {
       if (Array.isArray(v)) {
         const newObjs: any[] = [];
@@ -396,8 +405,12 @@ export default class Config {
       }
 
       if (obj !== null) {
-        if (typeof obj === "string" && obj.match(variableRegex) !== null) {
-          obj = this.normalizeString(obj, keyParts.slice(0, -1));
+        if (typeof obj === "string") {
+          if (obj.match(variableRegex) !== null) {
+            obj = this.normalizeString(obj, keyParts.slice(0, -1));
+          } else if (obj.startsWith("secret|")) {
+            obj = `(${obj})`; // wrap secrets in parentheses to allow process secrets to replace them even when they are part of a larger string with variables
+          }
         }
 
         result = result.replace(match[0], `${obj}`);

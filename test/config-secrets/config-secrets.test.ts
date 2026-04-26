@@ -2,7 +2,7 @@ import { describe, expect, test } from "@jest/globals";
 import Config from "../../src/config";
 import path from "path";
 
-describe.skip("Config with secrets", () => {
+describe("Config with secrets", () => {
   describe("with default secrets provider", () => {
     const config = new Config({
       configDir: path.join(__dirname),
@@ -16,7 +16,7 @@ describe.skip("Config with secrets", () => {
     });
   });
 
-  describe("with Vault", () => {
+  describe.skip("with Vault", () => {
     describe("with vault v1 secrets provider", () => {
       process.env["VAULT_ROLE_ID"] = "TODO";
       process.env["VAULT_SECRET_ID"] = "TODO";
@@ -44,7 +44,7 @@ describe.skip("Config with secrets", () => {
     });
   });
 
-  describe("with AWS Secrets Manager", () => {
+  describe.skip("with AWS Secrets Manager", () => {
     process.env["AWS_ACCESS_KEY_ID"] = "TODO";
     process.env["AWS_SECRET_ACCESS_KEY"] = "TODO";
 
@@ -58,7 +58,7 @@ describe.skip("Config with secrets", () => {
     });
   });
 
-  describe("with Azure Key Vault", () => {
+  describe.skip("with Azure Key Vault", () => {
     process.env["AZURE_TENANT_ID"] = "TODO";
     process.env["AZURE_CLIENT_ID"] = "TODO";
     process.env["AZURE_CLIENT_SECRET"] = "TODO";
@@ -73,7 +73,7 @@ describe.skip("Config with secrets", () => {
     });
   });
 
-  describe("with GCP Secret Manager", () => {
+  describe.skip("with GCP Secret Manager", () => {
     const config = new Config({
       configDir: path.join(__dirname),
       configEnv: "gcp-secret-manager",
