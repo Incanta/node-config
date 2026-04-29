@@ -34,9 +34,13 @@ export class LocalSecretsProvider implements ISecretsProvider {
 
     const secretMap: Record<string, string> = {};
     for (const line of secretLines) {
-      const [key, value] = line.split("=");
-      if (key && value) {
-        secretMap[key.trim()] = value.trim();
+      const idx = line.indexOf("=");
+      if (idx !== -1) {
+        const key = line.slice(0, idx).trim();
+        const value = line.slice(idx + 1).trim();
+        if (key) {
+          secretMap[key] = value;
+        }
       }
     }
 
