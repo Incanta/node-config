@@ -1,9 +1,4 @@
 import Config from "../config";
-import { VaultSecretsProvider } from "./vault";
-import { AwsSecretsManagerSecretsProvider } from "./aws-secrets-manager";
-import { AzureKeyVaultSecretsProvider } from "./azure-key-vault";
-import { GcpSecretManagerSecretsProvider } from "./gcp-secret-manager";
-import { LocalSecretsProvider } from "./local";
 
 export enum SecretsProviderType {
   HcpVault = "hcp-vault",
@@ -25,24 +20,40 @@ export interface ISecretsProvider {
   getSecret(config: Config, token: string, name: string): Promise<string>;
 }
 
-export function GetSecretsProvider(
+export async function GetSecretsProvider(
   provider: SecretsProviderType
-): ISecretsProvider {
+): Promise<ISecretsProvider> {
   switch (provider) {
     case SecretsProviderType.HcpVault:
       throw new Error(
         `Hashicorp's managed HCP Vault has been discontinued; please use another secrets provider\n\nhttps://developer.hashicorp.com/hcp/docs/vault-secrets/end-of-sale-announcement\n`
       );
-    case SecretsProviderType.Vault:
+    case SecretsProviderType.Vault: {
+      const { VaultSecretsProvider } = await import("./vault");
       return new VaultSecretsProvider();
-    case SecretsProviderType.AwsSecretsManager:
+    }
+    case SecretsProviderType.AwsSecretsManager: {
+      const { AwsSecretsManagerSecretsProvider } = await import(
+        "./aws-secrets-manager"
+      );
       return new AwsSecretsManagerSecretsProvider();
-    case SecretsProviderType.AzureKeyVault:
+    }
+    case SecretsProviderType.AzureKeyVault: {
+      const { AzureKeyVaultSecretsProvider } = await import(
+        "./azure-key-vault"
+      );
       return new AzureKeyVaultSecretsProvider();
-    case SecretsProviderType.GcpSecretManager:
+    }
+    case SecretsProviderType.GcpSecretManager: {
+      const { GcpSecretManagerSecretsProvider } = await import(
+        "./gcp-secret-manager"
+      );
       return new GcpSecretManagerSecretsProvider();
-    case SecretsProviderType.Local:
+    }
+    case SecretsProviderType.Local: {
+      const { LocalSecretsProvider } = await import("./local");
       return new LocalSecretsProvider();
+    }
     default:
       throw new Error(`Unknown secrets provider: ${provider}`);
   }

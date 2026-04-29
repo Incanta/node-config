@@ -293,7 +293,9 @@ export default class Config {
   }
 
   private async resolveSecretKey(secretKey: string): Promise<string> {
-    const provider = GetSecretsProvider(this.normalizedValues.secrets.provider);
+    const provider = await GetSecretsProvider(
+      this.normalizedValues.secrets.provider
+    );
 
     if (
       this.secretsToken === null ||
