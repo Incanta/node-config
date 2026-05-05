@@ -1,6 +1,6 @@
 {
   "name": "@incanta/config",
-  "version": "2.1.14",
+  "version": "2.1.15",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
@@ -16,7 +16,8 @@
   "scripts": {
     "build": "tsc -b .",
     "test": "jest",
-    "audit": "yarn-audit-fix"
+    "audit": "yarn-audit-fix",
+    "prepublish": "yarn build"
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1016.0",
