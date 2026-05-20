@@ -44,11 +44,18 @@ export default class Config {
   } | null = null;
   private secretsCache: Record<string, ISecret> = {};
 
+  private initOptions?: IConfigOptions;
+
   public constructor(options?: IConfigOptions) {
     this.init(options);
   }
 
+  public reload(): void {
+    this.init(this.initOptions);
+  }
+
   public init(options?: IConfigOptions): void {
+    this.initOptions = options;
     this.values = {};
     this.normalizedValues = {};
     this.customValues = {};
