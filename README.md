@@ -335,6 +335,14 @@ Place a `config-settings.json` file in the working directory root to customize t
 
 When resolving an environment name, the library first checks the main config directory, then checks each extra directory in order.
 
+You can also supply `extraDirs` via `IConfigOptions`. These are appended to (not replacing) any `extraDirs` defined in `config-settings.json`:
+
+```typescript
+const config = new Config({
+  extraDirs: ["C:\\path\\to\\MyProject\\Config\\Backend"],
+});
+```
+
 ## API Reference
 
 ### Default Export (Singleton)
@@ -362,6 +370,7 @@ const config = new Config(options?: IConfigOptions);
 | `configDir` | `string` | Path to the config directory |
 | `configEnv` | `string` | Environment name to load |
 | `cwd` | `string` | Working directory for resolving relative paths |
+| `extraDirs` | `string[]` | Extra directories to search for environments, appended to any `extraDirs` from `config-settings.json` |
 
 #### Methods
 

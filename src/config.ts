@@ -9,6 +9,7 @@ export interface IConfigOptions {
   configDir?: string;
   configEnv?: string;
   cwd?: string;
+  extraDirs?: string[];
 }
 
 export interface IConfigSettings {
@@ -61,6 +62,7 @@ export default class Config {
     this.customValues = {};
     this.secretsToken = null;
     this.secretsCache = {};
+    this.extraConfigDirs = [];
 
     let defaultConfigDir = "config";
     let defaultConfigEnv = "default";
@@ -97,6 +99,10 @@ export default class Config {
           this.overridePath = overridePath;
         }
       }
+    }
+
+    if (options?.extraDirs && Array.isArray(options.extraDirs)) {
+      this.extraConfigDirs = [...this.extraConfigDirs, ...options.extraDirs];
     }
 
     this.configDir =
