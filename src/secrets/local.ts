@@ -30,7 +30,13 @@ export class LocalSecretsProvider implements ISecretsProvider {
 
     const contents = await fs.readFile(absolutePath, "utf8");
 
-    const secretLines = contents.replace(/\r\n/g, "\n").split("\n");
+    const secretLines = contents
+      .replace(/\r\n/g, "\n")
+      .split("\n")
+      .filter((line) => {
+        const trimmed = line.trim();
+        return trimmed !== "" && !trimmed.startsWith("#");
+      });
 
     const secretMap: Record<string, string> = {};
     for (const line of secretLines) {
