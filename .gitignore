@@ -18,5 +18,6 @@ node_modules/
 
 # Yarn Integrity file
 .yarn-integrity
+.yarn
 
 gcp-credentials.json

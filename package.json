@@ -9,7 +9,7 @@
   "bin": {
     "config-env": "./lib/config-env.js"
   },
-  "packageManager": "yarn@1.22.19",
+  "packageManager": "yarn@4.18.1",
   "repository": "git@github.com:IncantaGames/config.git",
   "author": "Incanta Games",
   "license": "MIT",
