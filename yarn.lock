@@ -918,6 +918,7 @@ __metadata:
     "@azure/keyvault-secrets": "npm:^4.12.0"
     "@google-cloud/secret-manager": "npm:^6.3.0"
     "@jest/globals": "npm:^29.5.0"
+    "@types/js-yaml": "npm:^4.0.5"
     "@types/lodash.mergewith": "npm:^4.6.9"
     "@types/node": "npm:^18.11.18"
     "@typescript-eslint/eslint-plugin": "npm:^5.48.0"
@@ -929,6 +930,7 @@ __metadata:
     eslint-plugin-prefer-arrow: "npm:^1.2.3"
     eslint-plugin-prettier: "npm:^4.2.1"
     jest: "npm:^29.5.0"
+    js-yaml: "npm:^4.3.2"
     json5: "npm:^2.2.3"
     jsonc-parser: "npm:^3.2.0"
     lodash.mergewith: "npm:^4.6.2"
@@ -1516,6 +1518,13 @@ __metadata:
   dependencies:
     "@types/istanbul-lib-report": "npm:*"
   checksum: 10c0/1647fd402aced5b6edac87274af14ebd6b3a85447ef9ad11853a70fd92a98d35f81a5d3ea9fcb5dbb5834e800c6e35b64475e33fcae6bfa9acc70d61497c54ee
+  languageName: node
+  linkType: hard
+
+"@types/js-yaml@npm:^4.0.5":
+  version: 4.0.9
+  resolution: "@types/js-yaml@npm:4.0.9"
+  checksum: 10c0/24de857aa8d61526bbfbbaa383aa538283ad17363fcd5bb5148e2c7f604547db36646440e739d78241ed008702a8920665d1add5618687b6743858fae00da211
   languageName: node
   linkType: hard
 
@@ -4489,7 +4498,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:^4.1.0":
+"js-yaml@npm:^4.1.0, js-yaml@npm:^4.3.2":
   version: 4.3.2
   resolution: "js-yaml@npm:4.3.2"
   dependencies:
