@@ -1,6 +1,6 @@
 secrets:
   provider: "aws-secrets-manager"
 
-  aws-kms:
+  aws-secrets-manager:
     region: "us-east-1"
     secret-name: "testsecret"

@@ -18,7 +18,13 @@ export class AwsSecretsManagerSecretsProvider implements ISecretsProvider {
     token: string,
     name: string
   ): Promise<string> {
-    const region = config.get<string>("secrets.aws-kms.region");
+    const region =
+      config.tryGet<string>("secrets.aws-secrets-manager.region") ||
+      config.tryGet<string>("secrets.aws-kms.region");
+
+    if (region === null) {
+      throw new Error("No valid value for secrets.aws-secrets.manager");
+    }
 
     const client = new SecretsManagerClient({
       region,
